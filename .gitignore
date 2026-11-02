@@ -22,3 +22,25 @@ qa/local-prototype/*.json
 integrations/knowledge-rag-venv/
 integrations/upstream/
 qa/rag-integration/before/
+
+# Local operations, credential backups and test browser sessions must stay private.
+*.log
+*.pid
+*.pem
+*.key
+*.p12
+*.pfx
+bootstrap-passwords.json
+credentials.json
+*credentials*.local.*
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+**/.state.json
+**/.登录信息.txt
+qa/windows-comparison/
+qa/collaboration-pilot/private/
+backups/
+private/

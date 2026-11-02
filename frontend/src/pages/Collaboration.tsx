@@ -1,412 +1,176 @@
-import {useCallback, useEffect, useMemo, useState} from 'react';
-import {Alert, Button, Form, Input, Modal, Select, Space, Switch, Table, Tabs, Tag, Timeline, message} from 'antd';
-import {AlertTriangle, ClipboardList, FileStack, PackageSearch, RefreshCw, Send} from 'lucide-react';
-import {api, json} from '../api';
-import {EmptyState, PageTitle, SectionCard} from '../components/ui';
+import {useCallback, useEffect, useState} from 'react';
+import {Alert, Button, Form, Input, InputNumber, Modal, Select, Space, Switch, Table, Tabs, Tag, Typography} from 'antd';
+import {api, ApiError, json} from '../api';
+import {downloadText, EmptyState, PageTitle, SectionCard} from '../components/ui';
+import {useApp} from '../store';
 import './collaboration.css';
 
-type WorkRole = '市场' | '商务' | '项目经理' | '设计' | '采购';
-type Board = {
-  packages: any[];
-  contracts: any[];
-  bom: any[];
-  exceptions: any[];
-};
-
-const roles: WorkRole[] = ['市场', '商务', '项目经理', '设计', '采购'];
-const statusColor: Record<string, string> = {
-  draft: 'default', briefed: 'processing', changed: 'warning',
-  open: 'default', in_progress: 'processing', delivered: 'success', overdue: 'error', closed: 'default',
-  pending: 'default', quoted: 'processing', ordered: 'success', arrived: 'success', blocked: 'error',
-  high: 'error', medium: 'warning', low: 'default',
-};
-const statusLabel: Record<string, string> = {
-  draft: '草稿', briefed: '已交底', changed: '有变更',
-  open: '待处理', in_progress: '推进中', delivered: '已交付', overdue: '已超时', closed: '关闭',
-  pending: '待办', quoted: '已询价', ordered: '已下单', arrived: '已到货', blocked: '阻塞',
-};
+type WorkRole = 'market' | 'business' | 'project_manager' | 'design' | 'purchase';
+type Entity = {id: string; revision: number};
+type Project = Entity & {name: string; code: string; processOwner: string; dataOwner: string; roles: WorkRole[]; legacy?: boolean};
+type Access = {principal: string; admin: boolean; projects: Project[]};
+type History = {at: string; by: string; action: string; detail?: string};
+type Requirement = Entity & {ownerName: string; summary: string; constraints: string; attachments: string[]; dueHint: string;
+  status: string; version: number; schemeNotes: string; schemeVersion: number; changeReason?: string; history?: History[]};
+type Contract = Entity & {name: string; deliverable: string; trigger: string; qualityRule: string; designOwner: string;
+  purchaseOwner: string; escalateTo: string; dueAt: string; status: string; basisVersion: number; needsReview: boolean; overdue: boolean; note: string; evidence: string};
+type Bom = Entity & {materialCode: string; materialName: string; spec: string; qty: string; unit: string; needBy: string;
+  status: string; eta: string; sourceRef: string; basisVersion: number; needsReview: boolean; note: string};
+type Decision = Entity & {title: string; options: string; decision: string; ownerName: string; dueAt: string; evidence: string; status: string; result: string; resultEvidence?: string};
+type Exception = {id: string; type: string; title: string; owner: string; ownerRole: WorkRole; dueAt: string};
+type Event = Entity & {at: string; role: string; action: string; detail: string; recordId: string};
+type Board = {packages: Requirement[]; contracts: Contract[]; bom: Bom[]; decisions: Decision[]; exceptions: Exception[]; events: Event[]};
+type Member = Entity & {principal: string; name: string; roles: WorkRole[]};
+type Values = Record<string, string | number | string[] | boolean>;
+type Field = {name: string; label: string; kind?: 'textarea' | 'number' | 'date' | 'select' | 'roles'; optional?: boolean; options?: {value: string; label: string}[]};
+type Dialog = {title: string; fields: Field[]; initial?: Values; submit: (values: Values) => Promise<boolean>};
+const labels: Record<WorkRole, string> = {market: '市场', business: '商务', project_manager: '项目经理', design: '设计', purchase: '采购'};
+const roleOptions = Object.entries(labels).map(([value, label]) => ({value, label}));
+const names: Record<string, string> = {draft: '待交底草稿', changed: '变更待交底', briefed: '已交底', open: '待处理',
+  in_progress: '处理中', delivered: '待采购验收', returned: '退回补齐', closed: '已完成', pending: '待询价', quoted: '已询价', ordered: '已下单', arrived: '已到货', blocked: '阻塞'};
+const emptyBoard: Board = {packages: [], contracts: [], bom: [], decisions: [], exceptions: [], events: []};
+const stamp = (s?: string) => s ? new Date(s).toLocaleString('zh-CN', {hour12: false}) : '未登记';
+const field = (name: string, label: string, kind?: Field['kind'], optional = false): Field => ({name, label, kind, optional});
+const status = (v: string) => <Tag color={['blocked', 'returned', 'changed'].includes(v) ? 'warning' : 'blue'}>{names[v] || v}</Tag>;
 
 export default function CollaborationPage() {
-  const [board, setBoard] = useState<Board>({packages: [], contracts: [], bom: [], exceptions: []});
-  const [loading, setLoading] = useState(true);
+  const {role: loginRole} = useApp();
+  const [access, setAccess] = useState<Access>({principal: '', admin: false, projects: []});
+  const [projectId, setProjectId] = useState('');
+  const [workRole, setWorkRole] = useState<WorkRole>('project_manager');
+  const [board, setBoard] = useState<Board>(emptyBoard);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [busy, setBusy] = useState('');
-  const [workRole, setWorkRole] = useState<WorkRole>(() => (localStorage.getItem('zhixu-work-role') as WorkRole) || '项目经理');
-  const [mineOnly, setMineOnly] = useState(() => {
-    const saved = localStorage.getItem('zhixu-collab-mine');
-    if (saved === '0' || saved === '1') return saved === '1';
-    return (localStorage.getItem('zhixu-work-role') || '项目经理') === '项目经理';
-  });
-  const [tab, setTab] = useState(() => {
-    const h = location.hash.split('/')[1];
-    if (h === 'requirements') return 'packages';
-    if (h === 'contracts') return 'contracts';
-    if (h === 'exceptions') return 'exceptions';
-    return 'exceptions';
-  });
-  const [reqOpen, setReqOpen] = useState(false);
-  const [schemeOpen, setSchemeOpen] = useState<any>(null);
-  const [ifaceOpen, setIfaceOpen] = useState(false);
-  const [bomOpen, setBomOpen] = useState(false);
-  const [reqForm] = Form.useForm();
-  const [schemeForm] = Form.useForm();
-  const [ifaceForm] = Form.useForm();
-  const [bomForm] = Form.useForm();
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await api<Board>('/collaboration/board');
-      setBoard(data);
-      setError('');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '加载失败');
-    } finally {
-      setLoading(false);
-    }
+  const [mineOnly, setMineOnly] = useState(false);
+  const [dialog, setDialog] = useState<Dialog | null>(null);
+  const [form] = Form.useForm<Values>();
+  const [tab, setTab] = useState(() => location.hash.includes('requirements') ? 'packages' : location.hash.includes('contracts') ? 'contracts' : 'exceptions');
+  const project = access.projects.find(p => p.id === projectId);
+  const roles = project?.roles || [];
+  const loadAccess = useCallback(async () => {
+    const data = await api<Access>('/collaboration/access'); setAccess(data);
+    setProjectId(old => data.projects.some(p => p.id === old) ? old : data.projects[0]?.id || '');
   }, []);
-
-  useEffect(() => { void load(); }, [load]);
-  useEffect(() => { localStorage.setItem('zhixu-work-role', workRole); }, [workRole]);
-  useEffect(() => { localStorage.setItem('zhixu-collab-mine', mineOnly ? '1' : '0'); }, [mineOnly]);
-
-  const mutate = async (path: string, options: RequestInit) => {
-    setBusy(path);
+  const load = useCallback(async () => {
+    if (!projectId) return;
+    const [data, people] = await Promise.all([api<Board>(`/collaboration/board?projectId=${encodeURIComponent(projectId)}`),
+      access.admin ? api<Member[]>(`/collaboration/projects/${projectId}/members`) : Promise.resolve([])]);
+    setBoard(data); setMembers(people);
+  }, [projectId, access.admin]);
+  useEffect(() => {
+    let active = true;
+    setAccess({principal: '', admin: false, projects: []}); setProjectId(''); setBoard(emptyBoard);
+    void api<Access>('/collaboration/access').then(data => {if (active) {setAccess(data); setProjectId(data.projects[0]?.id || '');}})
+      .catch(e => {if (active) setError((e as Error).message);});
+    return () => {active = false;};
+  }, [loginRole]);
+  useEffect(() => {if (roles.length && !roles.includes(workRole)) setWorkRole(roles[0]);}, [project, workRole]);
+  useEffect(() => {
+    let active = true; setBoard(emptyBoard); setMembers([]);
+    if (!projectId) return;
+    setLoading(true);
+    void Promise.all([api<Board>(`/collaboration/board?projectId=${encodeURIComponent(projectId)}`),
+      access.admin ? api<Member[]>(`/collaboration/projects/${projectId}/members`) : Promise.resolve([])])
+      .then(([data, people]) => {if (active) {setBoard(data); setMembers(people);}})
+      .catch(e => {if (active) setError((e as Error).message);})
+      .finally(() => {if (active) setLoading(false);});
+    return () => {active = false;};
+  }, [projectId, access.admin]);
+  const run = async (path: string, method: string, body: unknown) => {
+    setBusy(true); setError('');
     try {
-      await api(path, options);
-      await load();
+      await api('/collaboration/' + path, {...json(method, body), headers: {'X-Collaboration-Role': workRole}});
+      await loadAccess(); await load(); return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : '操作失败');
-      throw e;
-    } finally {
-      setBusy('');
-    }
+      setError((e as Error).message);
+      if (e instanceof ApiError && [403, 409].includes(e.status)) {try {await loadAccess(); await load();} catch {setBoard(emptyBoard);}}
+      return false;
+    } finally {setBusy(false);}
   };
+  const open = (value: Dialog) => {form.resetFields(); form.setFieldsValue(value.initial || {}); setDialog(value);};
+  const edit = (path: string, row: Entity, title: string, fields: Field[], initial?: Values, extra?: Values) =>
+    open({title, fields, initial, submit: v => run(`${path}/${row.id}`, 'PATCH', {expectedRevision: row.revision, ...v, ...extra})});
+  const selectReq: Field = {name: 'reqPackageId', label: '需求依据', kind: 'select', options: board.packages
+    .filter(p => p.status === 'briefed' && p.schemeVersion === p.version).map(p => ({value: p.id, label: `v${p.version} · ${p.summary.slice(0, 50)}`}))};
+  const selectContract: Field = {name: 'ifaceId', label: '设计采购契约', kind: 'select', options: board.contracts
+    .filter(c => !c.needsReview).map(c => ({value: c.id, label: `${c.name} · v${c.basisVersion}`}))};
+  const contractAction = (r: Contract, next: string) => edit('contracts', r, next === 'delivered' ? '提交设计交付 / 重新核对版本' : next === 'closed' ? '采购确认验收' : '退回设计补齐',
+    [field('note', '说明 / 验收结论', 'textarea'), ...(next === 'delivered' ? [field('evidence', '交付证据编号 / 文件位置')] : [])],
+    next === 'delivered' ? {evidence: r.evidence || ''} : {}, {status: next});
+  const purchaseAction = (r: Bom, next?: string) => edit('bom', r, next ? `登记${names[next]}` : '更新交期与说明',
+    [field('note', '人工核对结果 / 阻塞原因', 'textarea'), field('eta', '预计到货日期', 'date', true),
+      field('sourceRef', '原系统订单 / 收货凭证编号', undefined, !['ordered', 'arrived'].includes(next || ''))],
+    {eta: r.eta || '', sourceRef: r.sourceRef || ''}, next ? {status: next} : {});
+  const authorize = (m?: Member) => open({title: '项目成员授权（空角色列表表示撤销）', fields: [field('principal', '成员在本页看到的身份编号'),
+    field('name', '成员姓名'), {name: 'roles', label: '允许的工作角色', kind: 'roles', optional: true}], initial: m ? {principal: m.principal, name: m.name, roles: m.roles} : {roles: []},
+    submit: v => run(`projects/${projectId}/members`, 'PUT', {...v, roles: v.roles || [], expectedRevision: members.find(x => x.principal === v.principal)?.revision || 0})});
+  const refresh = async () => {setLoading(true); setError(''); try {await loadAccess(); await load();} catch (e) {setError((e as Error).message); setBoard(emptyBoard);} finally {setLoading(false);}};
+  const exportProject = async () => {try {const data = await api(`/collaboration/projects/${projectId}/export`); downloadText(`${project?.code}-协同记录.json`, JSON.stringify(data, null, 2), 'application/json');} catch (e) {setError((e as Error).message);}};
+  const exceptions = mineOnly && workRole !== 'project_manager' ? board.exceptions.filter(e => e.ownerRole === workRole) : board.exceptions;
 
-  const createReq = async () => {
-    const values = await reqForm.validateFields();
-    await mutate('/collaboration/packages', json('POST', {
-      ...values,
-      marketOwner: workRole.startsWith('市场') ? workRole : '市场',
-      attachments: (values.attachments || '').split(/[,，\n]/).map((s: string) => s.trim()).filter(Boolean),
-    }));
-    setReqOpen(false);
-    reqForm.resetFields();
-    setTab('packages');
-  };
-
-  const brief = (row: any) => mutate(`/collaboration/packages/${row.id}`, json('PATCH', {status: 'briefed'}));
-  const markChanged = (row: any) => mutate(`/collaboration/packages/${row.id}`, json('PATCH', {status: 'changed'}));
-  const saveScheme = async () => {
-    const values = await schemeForm.validateFields();
-    await mutate(`/collaboration/packages/${schemeOpen.id}`, json('PATCH', {
-      schemeNotes: values.schemeNotes,
-      schemeAuthor: workRole,
-    }));
-    setSchemeOpen(null);
-    schemeForm.resetFields();
-  };
-
-  const createIface = async () => {
-    const values = await ifaceForm.validateFields();
-    await mutate('/collaboration/contracts', json('POST', values));
-    setIfaceOpen(false);
-    ifaceForm.resetFields();
-    setTab('contracts');
-  };
-
-  const createBom = async () => {
-    const values = await bomForm.validateFields();
-    await mutate('/collaboration/bom', json('POST', values));
-    setBomOpen(false);
-    bomForm.resetFields();
-    setTab('bom');
-  };
-
-  const hint = useMemo(() => ({
-    '市场': '录入甲方需求要点与附件索引，少因内部不同步反复改方案。',
-    '商务': '确认并发布交底包，查看设计方案回写。',
-    '项目经理': '看例外/待办一页，少开对接会。',
-    '设计': '看同版本需求包，回写方案要点，维护 BOM 契约。',
-    '采购': '看待交料表与交期，少催、少另建 Excel。',
-  }[workRole]), [workRole]);
-
-
-  const exceptionsForRole = useMemo(() => {
-    if (!mineOnly) return board.exceptions;
-    if (workRole === '项目经理') return board.exceptions; // 一页纸看全量断点
-    return board.exceptions.filter(e => {
-      const owner = String(e.owner || '');
-      const typ = String(e.type || '');
-      if (workRole === '市场') return typ.includes('需求') || owner.includes('市场') || owner.includes('商务');
-      if (workRole === '商务') return typ.includes('需求') || typ.includes('方案') || owner.includes('商务');
-      if (workRole === '设计') return typ.includes('方案') || typ.includes('料表') || owner.includes('设计');
-      if (workRole === '采购') return typ.includes('催料') || typ.includes('料表') || owner.includes('采购');
-      return true;
-    });
-  }, [board.exceptions, mineOnly, workRole]);
-
-  return (
-    <div className="collab-page page-content">
-      <PageTitle
-        eyebrow="COLLABORATION · PHASE 1"
-        title="协同工作台 · 沟通成本"
-        description="甲方需求交底 → 同版本同步 → 方案回写 → 设计↔采购契约 → 例外一页看全。"
-        actions={
-          <Space wrap>
-            <Select
-              aria-label="工作角色"
-              value={workRole}
-              style={{width: 140}}
-              options={roles.map(r => ({value: r, label: r}))}
-              onChange={setWorkRole}
-            />
-            <Button icon={<RefreshCw size={15}/>} onClick={() => void load()} loading={loading}>刷新</Button>
-          </Space>
-        }
-      />
-
-      <Alert className="collab-role-hint" type="info" showIcon message={`当前工作角色：${workRole} · 服务端同版本`} description={`${hint} 数据在服务端，换浏览器也能看见同一份。`}/>
-      {error && <Alert type="error" showIcon closable message={error} onClose={() => setError('')} style={{marginBottom: 16}}/>}
-
-      <div className="collab-metrics">
-        <div><b>{exceptionsForRole.length}</b><span>例外待办</span></div>
-        <div><b>{board.packages.filter(p => p.status === 'draft').length}</b><span>未交底需求</span></div>
-        <div><b>{board.contracts.filter(c => c.status === 'overdue').length}</b><span>超时契约</span></div>
-        <div><b>{board.bom.filter(b => b.status === 'blocked' || b.status === 'pending').length}</b><span>采购待办</span></div>
-      </div>
-
-      <Tabs
-        activeKey={tab}
-        onChange={setTab}
-        items={[
-          {
-            key: 'exceptions',
-            label: <span><AlertTriangle size={14}/> 例外/待办</span>,
-            children: (
-              <SectionCard title="例外一页纸" subtitle="默认按当前工作角色过滤；项目经理看全量断点"
-                action={<Space><span className="muted">只看与我相关</span><Switch checked={mineOnly} onChange={setMineOnly} /></Space>}>
-                {loading ? <div role="status">加载中…</div> : exceptionsForRole.length ? (
-                  <Table
-                    rowKey="id"
-                    pagination={false}
-                    dataSource={exceptionsForRole}
-                    columns={[
-                      {title: '类型', dataIndex: 'type', width: 120, render: (t, r) => <Tag color={statusColor[r.severity]}>{t}</Tag>},
-                      {title: '项目', dataIndex: 'projectName', width: 200},
-                      {title: '说明', dataIndex: 'title'},
-                      {title: '责任人', dataIndex: 'owner', width: 120},
-                    ]}
-                  />
-                ) : <EmptyState icon={<AlertTriangle/>} title="暂无例外" description="演示链跑通后，断点会出现在这里。"/>}
-              </SectionCard>
-            ),
-          },
-          {
-            key: 'packages',
-            label: <span><FileStack size={14}/> 需求交底</span>,
-            children: (
-              <SectionCard
-                title="甲方需求包"
-                subtitle="市场录入 → 商务交底 → 设计回写方案"
-                action={
-                  <Space>
-                    {(workRole === '市场') && <Button type="primary" onClick={() => setReqOpen(true)}>录入需求</Button>}
-                  </Space>
-                }
-              >
-                <div className="collab-card-list">
-                  {board.packages.map(row => (
-                    <article className="collab-card" key={row.id}>
-                      <header>
-                        <div>
-                          <h3>{row.projectName}</h3>
-                          <small>v{row.version} · {row.marketOwner}{row.bizOwner ? ` → ${row.bizOwner}` : ''}</small>
-                        </div>
-                        <Tag color={statusColor[row.status]}>{statusLabel[row.status] || row.status}</Tag>
-                      </header>
-                      <p>{row.summary}</p>
-                      {row.constraints && <p className="muted">约束：{row.constraints}</p>}
-                      {row.attachments?.length > 0 && <p className="muted">附件：{row.attachments.join('、')}</p>}
-                      {row.schemeNotes ? (
-                        <div className="collab-scheme">
-                          <strong>方案优化要点</strong>
-                          <pre>{row.schemeNotes}</pre>
-                          <small>{row.schemeAuthor} · {row.schemeAt}</small>
-                        </div>
-                      ) : (
-                        <p className="muted">尚未回写方案要点</p>
-                      )}
-                      <Timeline
-                        className="collab-history"
-                        items={(row.history || []).slice(-4).reverse().map((h: any) => ({
-                          children: <span><b>{h.by}</b> {h.action}<small> {h.at}</small></span>,
-                        }))}
-                      />
-                      <footer>
-                        {workRole === '商务' && row.status === 'draft' && (
-                          <Button size="small" type="primary" icon={<Send size={14}/>} loading={!!busy} onClick={() => void brief(row)}>发布交底</Button>
-                        )}
-                        {(workRole === '市场' || workRole === '商务') && row.status !== 'draft' && (
-                          <Button size="small" onClick={() => void markChanged(row)}>标记需求变更升版</Button>
-                        )}
-                        {workRole === '设计' && row.status !== 'draft' && (
-                          <Button size="small" type="primary" onClick={() => { setSchemeOpen(row); schemeForm.setFieldsValue({schemeNotes: row.schemeNotes || ''}); }}>回写方案要点</Button>
-                        )}
-                        {workRole === '设计' && row.status !== 'draft' && (
-                          <Button size="small" onClick={() => void mutate('/collaboration/contracts', json('POST', {
-                            projectName: row.projectName,
-                            name: 'BOM/料表交接',
-                            trigger: `需求包 ${row.id} 方案回写后`,
-                            deliverable: '可采购料表（含规格、数量、需用日期）',
-                            slaHours: 24,
-                            qualityRule: '料号与图号一一对应；缺项标红',
-                            designOwner: '设计',
-                            purchaseOwner: '采购',
-                            escalateTo: '项目经理',
-                            reqPackageId: row.id,
-                          })).then(() => setTab('contracts'))}>从本包挂 BOM 契约</Button>
-                        )}
-                        <small className="muted">ID {row.id}</small>
-                      </footer>
-                    </article>
-                  ))}
-                  {!board.packages.length && !loading && <EmptyState icon={<FileStack/>} title="还没有需求包" description="市场角色可录入甲方需求。"/>}
-                </div>
-              </SectionCard>
-            ),
-          },
-          {
-            key: 'contracts',
-            label: <span><ClipboardList size={14}/> 接口契约</span>,
-            children: (
-              <SectionCard
-                title="设计 ↔ 采购 接口契约"
-                subtitle="先做 BOM/料表交接；超时自动进例外页"
-                action={workRole === '设计' ? <Button type="primary" onClick={() => setIfaceOpen(true)}>新建契约</Button> : null}
-              >
-                <Table
-                  rowKey="id"
-                  loading={loading}
-                  dataSource={board.contracts}
-                  pagination={false}
-                  columns={[
-                    {title: '契约', dataIndex: 'name', render: (n, r) => <div><b>{n}</b><div className="muted">{r.projectName}</div></div>},
-                    {title: '触发 / 交付物', render: (_, r) => <div><div>{r.trigger}</div><small>{r.deliverable}</small></div>},
-                    {title: '时限', width: 100, render: (_, r) => `${r.slaHours}h`},
-                    {title: 'Owner', width: 160, render: (_, r) => <div><div>{r.designOwner}</div><small>{r.purchaseOwner}</small></div>},
-                    {title: '状态', width: 110, dataIndex: 'status', render: s => <Tag color={statusColor[s]}>{statusLabel[s] || s}</Tag>},
-                    {title: '备注', dataIndex: 'note', ellipsis: true},
-                    {title: '操作', width: 220, render: (_, r) => (
-                      <Space size={4} wrap>
-                        {workRole === '设计' && r.status !== 'delivered' && r.status !== 'closed' && (
-                          <Button size="small" onClick={() => void mutate(`/collaboration/contracts/${r.id}`, json('PATCH', {status: 'delivered'}))}>标记已交付</Button>
-                        )}
-                        {workRole === '采购' && r.status === 'open' && (
-                          <Button size="small" onClick={() => void mutate(`/collaboration/contracts/${r.id}`, json('PATCH', {status: 'in_progress', note: '采购已接手'}))}>接手</Button>
-                        )}
-                        {workRole === '项目经理' && r.status === 'overdue' && (
-                          <Button size="small" danger onClick={() => {
-                            const stamp = new Date().toLocaleString('zh-CN', {timeZone: 'Asia/Shanghai'});
-                            void mutate(`/collaboration/contracts/${r.id}`, json('PATCH', {note: '项目经理已介入催办 · ' + stamp}))
-                              .then(() => message.success('已记催办，备注已写入契约'));
-                          }}>记催办</Button>
-                        )}
-                      </Space>
-                    )},
-                  ]}
-                />
-              </SectionCard>
-            ),
-          },
-          {
-            key: 'bom',
-            label: <span><PackageSearch size={14}/> 采购料表</span>,
-            children: (
-              <SectionCard
-                title="料表 / 交期台账"
-                subtitle="以契约交付物为唯一待办来源，少另建 Excel"
-                action={(workRole === '采购' || workRole === '设计') ? <Button type="primary" onClick={() => setBomOpen(true)}>新增料行</Button> : null}
-              >
-                <Table
-                  rowKey="id"
-                  loading={loading}
-                  dataSource={board.bom}
-                  pagination={false}
-                  columns={[
-                    {title: '项目', dataIndex: 'projectName', width: 160},
-                    {title: '物料', dataIndex: 'materialName', render: (n, r) => <div><b>{n}</b><div className="muted">{r.spec}</div></div>},
-                    {title: '数量', dataIndex: 'qty', width: 90},
-                    {title: '需用日', dataIndex: 'needBy', width: 110},
-                    {title: 'ETA', dataIndex: 'eta', width: 110, render: (eta, r) => workRole === '采购' ? (
-                      <Button size="small" type="link" onClick={() => {
-                        const v = window.prompt('交期 ETA (YYYY-MM-DD)', eta || '');
-                        if (v != null) void mutate(`/collaboration/bom/${r.id}`, json('PATCH', {eta: v, status: r.status === 'pending' ? 'quoted' : r.status, note: r.note || '已回复交期'}));
-                      }}>{eta || '填交期'}</Button>
-                    ) : (eta || '—')},
-                    {title: '状态', dataIndex: 'status', width: 100, render: s => <Tag color={statusColor[s]}>{statusLabel[s] || s}</Tag>},
-                    {title: '备注', dataIndex: 'note'},
-                    {title: '操作', width: 200, render: (_, r) => workRole === '采购' ? (
-                      <Space size={4} wrap>
-                        <Button size="small" onClick={() => void mutate(`/collaboration/bom/${r.id}`, json('PATCH', {status: 'quoted', note: r.note || '已询价'}))}>已询价</Button>
-                        <Button size="small" onClick={() => void mutate(`/collaboration/bom/${r.id}`, json('PATCH', {status: 'ordered'}))}>已下单</Button>
-                        <Button size="small" danger onClick={() => void mutate(`/collaboration/bom/${r.id}`, json('PATCH', {status: 'blocked', note: '催料未回'}))}>阻塞</Button>
-                      </Space>
-                    ) : null},
-                  ]}
-                />
-              </SectionCard>
-            ),
-          },
-        ]}
-      />
-
-      <Modal title="录入甲方需求" open={reqOpen} onCancel={() => setReqOpen(false)} onOk={() => void createReq()} okText="保存草稿" confirmLoading={!!busy}>
-        <Form form={reqForm} layout="vertical">
-          <Form.Item name="projectName" label="项目" rules={[{required: true, message: '请填写项目'}]}><Input/></Form.Item>
-          <Form.Item name="ownerName" label="甲方"><Input/></Form.Item>
-          <Form.Item name="summary" label="需求要点" rules={[{required: true, message: '请填写要点'}]}><Input.TextArea rows={3}/></Form.Item>
-          <Form.Item name="constraints" label="工期/造价/技术约束"><Input.TextArea rows={2}/></Form.Item>
-          <Form.Item name="attachments" label="附件索引（逗号分隔）"><Input.TextArea rows={2}/></Form.Item>
-          <Form.Item name="dueHint" label="交底时限提示"><Input placeholder="如：交底后 48h 内回方案"/></Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal title="回写方案优化要点" open={!!schemeOpen} onCancel={() => setSchemeOpen(null)} onOk={() => void saveScheme()} okText="保存" confirmLoading={!!busy}>
-        <Form form={schemeForm} layout="vertical">
-          <Form.Item name="schemeNotes" label="方案要点 / 优化建议" rules={[{required: true, message: '请填写方案要点'}]}>
-            <Input.TextArea rows={6} placeholder="例如：改用预制支管减少现场焊口；切换窗口内先旁通再切主管…"/>
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal title="新建设计↔采购契约" open={ifaceOpen} onCancel={() => setIfaceOpen(false)} onOk={() => void createIface()} okText="创建" confirmLoading={!!busy}>
-        <Form form={ifaceForm} layout="vertical" initialValues={{name: 'BOM/料表交接', slaHours: 24, designOwner: '设计', purchaseOwner: '采购', escalateTo: '项目经理'}}>
-          <Form.Item name="projectName" label="项目" rules={[{required: true}]}><Input/></Form.Item>
-          <Form.Item name="name" label="契约名称" rules={[{required: true}]}><Input/></Form.Item>
-          <Form.Item name="trigger" label="触发条件" rules={[{required: true}]}><Input/></Form.Item>
-          <Form.Item name="deliverable" label="交付物" rules={[{required: true}]}><Input/></Form.Item>
-          <Form.Item name="slaHours" label="时限（小时）" rules={[{required: true}]}><Input type="number"/></Form.Item>
-          <Form.Item name="qualityRule" label="质量规则"><Input/></Form.Item>
-          <Form.Item name="designOwner" label="设计 Owner"><Input/></Form.Item>
-          <Form.Item name="purchaseOwner" label="采购 Owner"><Input/></Form.Item>
-          <Form.Item name="escalateTo" label="异常升级"><Input/></Form.Item>
-          <Form.Item name="reqPackageId" label="关联需求包 ID（可选）"><Input/></Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal title="新增料表行" open={bomOpen} onCancel={() => setBomOpen(false)} onOk={() => void createBom()} okText="添加" confirmLoading={!!busy}>
-        <Form form={bomForm} layout="vertical">
-          <Form.Item name="projectName" label="项目" rules={[{required: true}]}><Input/></Form.Item>
-          <Form.Item name="materialName" label="物料" rules={[{required: true}]}><Input/></Form.Item>
-          <Form.Item name="spec" label="规格"><Input/></Form.Item>
-          <Form.Item name="qty" label="数量"><Input/></Form.Item>
-          <Form.Item name="needBy" label="需用日期"><Input placeholder="YYYY-MM-DD"/></Form.Item>
-          <Form.Item name="supplierHint" label="供应商提示"><Input/></Form.Item>
-          <Form.Item name="ifaceId" label="关联契约 ID"><Input/></Form.Item>
-          <Form.Item name="reqPackageId" label="关联需求包 ID"><Input/></Form.Item>
-        </Form>
-      </Modal>
-    </div>
-  );
+  return <div className="collab-page page-content">
+    <PageTitle eyebrow="COLLABORATION · PILOT" title="协同工作台" description="需求交底 → 设计交付 → 采购验收 → 例外与人工决策。" actions={<Space wrap>
+      <Select aria-label="项目" placeholder="选择项目" value={projectId || undefined} style={{width: 230}} options={access.projects.map(p => ({value: p.id, label: `${p.code} · ${p.name}`}))} onChange={v => {setDialog(null); setProjectId(v);}}/>
+      <Select aria-label="工作角色" value={roles.includes(workRole) ? workRole : undefined} placeholder="待授权" style={{width: 120}} options={roles.map(value => ({value, label: labels[value]}))} onChange={setWorkRole}/>
+      <Button loading={loading} onClick={() => void refresh()}>刷新</Button>
+      {access.admin && <Button onClick={() => open({title: '建立项目责任档案', fields: [field('code', '项目编码（字母、数字、横线）'), field('name', '项目名称'), field('processOwner', '流程责任人'), field('dataOwner', '数据责任人')], submit: v => run('projects', 'POST', v)})}>新建项目</Button>}
+    </Space>}/>
+    <Alert className="collab-role-hint" type="info" showIcon message="权限由服务端校验；仅显示已授权项目和角色" description={<span>当前浏览器身份编号：<Typography.Text copyable>{access.principal || '加载中'}</Typography.Text>。请管理员按此编号授权。当前使用浏览器身份与管理口令；浏览器更换或人员离职需重新核对授权。</span>}/>
+    {error && <Alert role="alert" type="error" showIcon message={error} closable onClose={() => setError('')} style={{marginBottom: 16}}/>}
+    {!project ? <EmptyState title="暂无已授权项目" description={access.admin ? '先建立项目并明确流程、数据责任人，再给成员授权。' : '复制上面的身份编号给管理员；授权后点击刷新。'}/> : <>
+      <SectionCard title={`${project.code} · ${project.name}`} subtitle={`流程责任人：${project.processOwner} ｜ 数据责任人：${project.dataOwner}`}>
+        <p>财务、物料及订单以用友 / ERP 原系统为准；这里登记协同和人工核对结果。节省工时、收益与 ROI：待实测。</p>
+        {project.legacy && <Alert type="warning" message="历史数据已保留，原有交付依据需要重新核对。"/>}<Space wrap><Button onClick={() => void exportProject()}>导出本项目记录</Button>
+          {access.admin && <Button onClick={() => edit('projects', project, '确认项目责任人', [field('processOwner', '流程责任人'), field('dataOwner', '数据责任人')], {processOwner: project.processOwner, dataOwner: project.dataOwner})}>确认责任人</Button>}</Space>
+      </SectionCard>
+      <div className="collab-metrics" style={{marginTop: 16}}>{[[exceptions.length, '例外待办'], [board.packages.filter(p => p.status !== 'briefed').length, '待交底版本'],
+        [board.contracts.filter(c => c.overdue).length, '超时交付'], [board.bom.filter(b => b.needsReview).length, '依据待复核料表']].map(([n, title]) => <div key={title}><b>{n}</b><span>{title}</span></div>)}</div>
+      <Tabs activeKey={tab} onChange={setTab} items={[
+        {key: 'exceptions', label: '例外 / 待办', children: <SectionCard title="需要人处理的断点" subtitle="明确责任、到期时间与下一步处理" action={<Space>只看当前角色<Switch aria-label="只看当前角色" checked={mineOnly} onChange={setMineOnly}/></Space>}>
+          <Table<Exception> loading={loading} rowKey="id" dataSource={exceptions} scroll={{x: 760}} columns={[{title: '类型', dataIndex: 'type'}, {title: '下一步', dataIndex: 'title'}, {title: '责任人', dataIndex: 'owner'}, {title: '到期', dataIndex: 'dueAt', render: v => v ? stamp(v) : '按交底约定'}]}/></SectionCard>},
+        {key: 'packages', label: '需求交底', children: <SectionCard title="同版本需求依据" subtitle="发布后由商务登记变更升版；旧方案与记录保留" action={workRole === 'market' && <Button type="primary" onClick={() => open({title: '录入需求草稿', fields: [field('ownerName', '客户需求确认人'), field('summary', '需求要点', 'textarea'), field('constraints', '工期、规格、范围约束', 'textarea', true), field('attachmentsText', '证据编号 / 文件位置（每行一条）', 'textarea', true), field('dueHint', '响应时间约定', undefined, true)], submit: v => {const {attachmentsText, ...rest} = v; return run('packages', 'POST', {...rest, projectId, attachments: String(attachmentsText || '').split('\n').map(s => s.trim()).filter(Boolean)});}})}>录入需求</Button>}>
+          <div className="collab-card-list">{board.packages.map(r => <article className="collab-card" key={r.id}>
+            <header><h3>需求 v{r.version} · {r.ownerName || '待确认客户联系人'}</h3>{status(r.status)}</header><p style={{whiteSpace: 'pre-wrap'}}>{r.summary}</p><p>约束：{r.constraints || '未登记'}</p>
+            <p>证据：{r.attachments?.join('；') || '未登记'} ｜ 响应：{r.dueHint || '未登记'}</p>{r.changeReason && <p>变更原因：{r.changeReason}</p>}
+            <div className="collab-scheme">方案依据：{r.schemeVersion ? `v${r.schemeVersion}` : '待回写'}<pre>{r.schemeNotes || '尚无当前版本方案'}</pre></div><footer>
+              {workRole === 'market' && r.status === 'draft' && <Button onClick={() => edit('packages', r, '编辑需求草稿', [field('summary', '需求要点', 'textarea'), field('constraints', '约束', 'textarea', true)], {summary: r.summary, constraints: r.constraints})}>编辑草稿</Button>}
+              {workRole === 'business' && r.status !== 'briefed' && <Button loading={busy} onClick={() => void run(`packages/${r.id}`, 'PATCH', {expectedRevision: r.revision, status: 'briefed'})}>确认发布 v{r.version}</Button>}
+              {workRole === 'business' && r.status === 'briefed' && <Button onClick={() => edit('packages', r, '登记需求变更（下游需要复核）', [field('summary', '变更后的完整需求', 'textarea'), field('constraints', '变更后约束', 'textarea', true), field('changeReason', '变更原因及证据编号', 'textarea')], {summary: r.summary, constraints: r.constraints}, {status: 'changed'})}>登记变更</Button>}
+              {workRole === 'design' && r.status === 'briefed' && <Button onClick={() => edit('packages', r, `回写 v${r.version} 方案`, [field('schemeNotes', '方案要点与核对依据', 'textarea')], {schemeNotes: r.schemeNotes})}>回写方案</Button>}
+            </footer>{r.history?.length ? <details><summary>修改记录（修订 {r.revision}）</summary>{r.history.map((h, i) => <p key={i}>{stamp(h.at)} · {h.by} · {h.action} {h.detail}</p>)}</details> : null}
+          </article>)}</div>{!board.packages.length && <EmptyState title="还没有需求" description="由市场录入第一条真实需求。"/>}</SectionCard>},
+        {key: 'contracts', label: '设计采购契约', children: <SectionCard title="交付有依据，验收有结论" subtitle="设计提交证据；采购按质量规则确认或退回" action={workRole === 'design' && <Button type="primary" onClick={() => open({title: '建立设计采购契约', fields: [selectReq, field('name', '交付名称'), field('trigger', '触发条件'), field('deliverable', '交付物与编号要求'), field('qualityRule', '采购验收规则', 'textarea'), field('slaHours', '承诺时限（1～720 小时）', 'number'), field('designOwner', '设计责任人'), field('purchaseOwner', '采购责任人'), field('escalateTo', '超时升级给谁')], initial: {slaHours: 24}, submit: v => run('contracts', 'POST', v)})}>建立契约</Button>}>
+          <div className="collab-card-list">{board.contracts.map(r => <article className="collab-card" key={r.id}><header><h3>{r.name} · 依据 v{r.basisVersion}</h3><Space>{status(r.status)}{r.needsReview && <Tag color="error">依据待复核</Tag>}{r.overdue && <Tag color="error">已超时</Tag>}</Space></header>
+            <p>触发：{r.trigger} ｜ 交付：{r.deliverable}</p><p>验收规则：{r.qualityRule}</p><p>设计：{r.designOwner} → 采购：{r.purchaseOwner} ｜ 到期：{stamp(r.dueAt)} ｜ 升级：{r.escalateTo}</p><p>证据：{r.evidence || '未交付'} ｜ 说明：{r.note || '未登记'}</p>
+            <footer>{workRole === 'design' && (r.status !== 'closed' || r.needsReview) && <Button onClick={() => contractAction(r, 'delivered')}>提交交付依据</Button>}
+              {workRole === 'purchase' && r.status === 'delivered' && !r.needsReview && <><Button onClick={() => contractAction(r, 'closed')}>确认验收</Button><Button onClick={() => contractAction(r, 'returned')}>退回补齐</Button></>}</footer></article>)}</div>
+          {!board.contracts.length && <EmptyState title="还没有交付契约" description="交底及方案确认后，建立交付和验收约定。"/>}</SectionCard>},
+        {key: 'bom', label: '采购料表', children: <SectionCard title="版本与原系统凭证一起核对" subtitle="变更后先复核依据，保留已经发生的订单事实" action={workRole === 'design' && <Button type="primary" onClick={() => open({title: '登记设计料表', fields: [selectContract, field('materialCode', '物料编码（与原系统对应）'), field('materialName', '物料名称'), field('spec', '规格 / 图号'), field('qty', '数量（只填数字）'), field('unit', '单位'), field('needBy', '需用日期', 'date'), field('supplierHint', '供应商线索', undefined, true)], submit: v => run('bom', 'POST', v)})}>登记料表</Button>}>
+          <Table<Bom> rowKey="id" dataSource={board.bom} scroll={{x: 1100}} columns={[
+            {title: '物料', render: (_, r) => <><b>{r.materialCode} · {r.materialName}</b><div>{r.spec}</div><small>{r.qty} {r.unit} · 需用 {r.needBy}</small></>},
+            {title: '依据', render: (_, r) => <>v{r.basisVersion} {r.needsReview && <Tag color="error">待复核</Tag>}</>},
+            {title: '人工登记状态', render: (_, r) => <>{status(r.status)}<div>预计：{r.eta || '待确认'}</div></>}, {title: '核对记录', render: (_, r) => <>{r.note}<div>{r.sourceRef || '尚无原系统凭证'}</div></>},
+            {title: '操作', width: 250, render: (_, r) => <Space wrap>{workRole === 'design' && r.needsReview && <Button onClick={() => edit('bom', r, '复核本行依据（不改变采购事实）', [field('note', '核对说明及变更差异', 'textarea')], {}, {rebase: true})}>设计复核</Button>}
+              {workRole === 'purchase' && <><Button onClick={() => purchaseAction(r)}>交期 / 说明</Button><Select aria-label={`${r.materialName}采购操作`} placeholder="登记进度" style={{width: 120}} value={undefined}
+                options={(r.needsReview ? ['blocked'] : ['quoted', 'ordered', 'arrived', 'blocked']).map(value => ({value, label: names[value]}))} onChange={value => purchaseAction(r, value)}/></>}</Space>},
+          ]}/></SectionCard>},
+        {key: 'decisions', label: '人工决策台账', children: <SectionCard title="决定、责任、期限、结果" subtitle="人工决定；完成时补充执行证据" action={workRole === 'project_manager' && <Button type="primary" onClick={() => open({title: '登记人工决策', fields: [field('title', '事项'), field('options', '讨论过的选项', 'textarea'), field('decision', '人工决定', 'textarea'), field('ownerName', '执行责任人'), field('dueAt', '完成期限', 'date'), field('evidence', '决策依据 / 会议编号')], submit: v => run('decisions', 'POST', {...v, projectId})})}>登记决策</Button>}>
+          <Table<Decision> rowKey="id" dataSource={board.decisions} scroll={{x: 850}} columns={[{title: '事项 / 选项', render: (_, r) => <><b>{r.title}</b><div>{r.options}</div></>}, {title: '人工决定', dataIndex: 'decision'}, {title: '执行责任', render: (_, r) => <>{r.ownerName}<div>{r.dueAt}</div></>}, {title: '证据', dataIndex: 'evidence'},
+            {title: '结果', render: (_, r) => r.status === 'closed' ? <>{r.result}<div>{r.resultEvidence}</div></> : workRole === 'project_manager' ? <Button onClick={() => edit('decisions', r, '登记执行结果', [field('result', '执行结果', 'textarea'), field('evidence', '执行证据编号')])}>登记结果</Button> : '待执行'}]}/></SectionCard>},
+        {key: 'events', label: '变更记录', children: <SectionCard title="服务端操作记录" subtitle="完整记录随项目导出；成员授权由管理员单独管理"><Table<Event> rowKey="id" dataSource={board.events} scroll={{x: 800}} columns={[{title: '时间', dataIndex: 'at', render: stamp}, {title: '角色', dataIndex: 'role', render: v => labels[v as WorkRole] || v}, {title: '动作', dataIndex: 'action'}, {title: '说明', dataIndex: 'detail'}, {title: '记录编号', dataIndex: 'recordId'}]}/></SectionCard>},
+        ...(access.admin ? [{key: 'members', label: '成员授权', children: <SectionCard title="本项目的业务权限" subtitle="管理员拥有全部权限；其他身份逐项目授权，撤销后立即失效" action={<Button onClick={() => authorize()}>新增 / 调整授权</Button>}><Table<Member> rowKey="id" dataSource={members} scroll={{x: 750}} columns={[{title: '姓名', dataIndex: 'name'}, {title: '浏览器身份编号', dataIndex: 'principal'}, {title: '允许角色', render: (_, r) => r.roles.map(x => labels[x]).join('、') || '已撤销'}, {title: '操作', render: (_, r) => <Button onClick={() => authorize(r)}>调整 / 撤销</Button>}]}/></SectionCard>}] : []),
+      ]}/>
+    </>}
+    <Modal title={dialog?.title} open={Boolean(dialog)} confirmLoading={busy} onCancel={() => !busy && setDialog(null)} onOk={() => form.submit()} okText="保存" cancelText="取消">
+      <Form form={form} layout="vertical" onFinish={async values => {
+        // Include explicit empty text when editing so users can clear an optional field.
+        const cleaned = Object.fromEntries(Object.entries(values).filter(([key, v]) => v !== undefined && !(v === '' && dialog?.fields.find(f => f.name === key)?.kind === 'date')));
+        if (dialog && await dialog.submit(cleaned as Values)) setDialog(null);
+      }}>{dialog?.fields.map(f => <Form.Item key={f.name} name={f.name} label={f.label} rules={f.optional ? [] : [{required: true, message: `请填写${f.label}`}]}>
+        {f.kind === 'textarea' ? <Input.TextArea rows={4} maxLength={4000}/> : f.kind === 'number' ? <InputNumber min={1} max={720}/> : f.kind === 'select' || f.kind === 'roles' ? <Select showSearch optionFilterProp="label" mode={f.kind === 'roles' ? 'multiple' : undefined} options={f.kind === 'roles' ? roleOptions : f.options}/> : <Input type={f.kind === 'date' ? 'date' : 'text'}/>}
+      </Form.Item>)}</Form><small>遇到版本冲突时，本次内容不会覆盖他人修改。请保留输入，关闭窗口核对最新记录后再提交。</small>
+    </Modal>
+  </div>;
 }

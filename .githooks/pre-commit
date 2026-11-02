@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+if [ -x backend/.venv/Scripts/python.exe ]; then
+  backend/.venv/Scripts/python.exe scripts/check-secrets.py --staged
+elif [ -x backend/.venv/bin/python ]; then
+  backend/.venv/bin/python scripts/check-secrets.py --staged
+else
+  python3 scripts/check-secrets.py --staged
+fi

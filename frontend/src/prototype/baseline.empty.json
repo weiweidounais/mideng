@@ -1,0 +1,5 @@
+{
+  "notice": "公开仓库仅含空白原型种子。生产模式使用真实后端，不导入内部业务快照。",
+  "kbs": [], "docs": [], "tasks": [], "models": [], "connections": [],
+  "sessions": [], "logs": [], "applications": [], "applicationRuns": []
+}

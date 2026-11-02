@@ -1,4 +1,4 @@
-import baseline from './baseline.json';
+import baseline from './baseline.empty.json';
 
 /** A deliberately isolated, browser-only transport. No network fallback exists. */
 export const PROTOTYPE_STORAGE_KEY = 'zhixu:local-prototype:v1';

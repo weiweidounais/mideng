@@ -19,7 +19,7 @@ const js = ts.transpileModule(source, {compilerOptions: {module: ts.ModuleKind.C
 const module = {exports: {}};
 vm.runInNewContext(js, {
   exports: module.exports, module,
-  require: name => {assert.equal(name, './baseline.json'); return seed;},
+  require: name => {assert.equal(name, './baseline.empty.json'); return seed;},
   crypto: webcrypto, structuredClone, setTimeout, FormData, AbortController,
   fetch: () => {networkCalls++; throw new Error('Network must remain unreachable');},
 });

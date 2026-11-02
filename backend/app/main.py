@@ -21,18 +21,16 @@ async def lifespan(app):
     recover_chat_runs()
     recover_application_runs()
     recover_jobs()
-    from .collaboration import _seed_if_empty
-    try:
-        _seed_if_empty()
-    except Exception:
-        logging.exception("collaboration seed failed")
+    from .collaboration import _migrate_legacy
+    with db_session() as db:
+        _migrate_legacy(db)
     yield
     shutdown_jobs()
     close_vector_store()
     stop_owned_engine()
 
 app=FastAPI(title="密灯 · 企业知识中台",version="1.0.0",lifespan=lifespan)
-app.add_middleware(CORSMiddleware,allow_origins=config.origins,allow_credentials=True,allow_methods=["GET","POST","PATCH","DELETE","OPTIONS"],allow_headers=["Content-Type","X-CSRF-Token"])
+app.add_middleware(CORSMiddleware,allow_origins=config.origins,allow_credentials=True,allow_methods=["GET","POST","PUT","PATCH","DELETE","OPTIONS"],allow_headers=["Content-Type","X-CSRF-Token","X-Collaboration-Role"])
 
 @app.middleware("http")
 async def response_security(request:Request,call_next):

@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --mode prototype",
+    "dev": "vite --host 127.0.0.1 --mode live",
+    "dev:prototype": "vite --host 127.0.0.1 --mode prototype",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "dev:live": "vite --host 127.0.0.1 --mode live --port 5174",
