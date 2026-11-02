@@ -1,0 +1,90 @@
+event: meta
+data: {"sessionId": "02243e2275074fd89602118e1e13e61b", "assistantId": "b5901d844d134fbcb9fe7723d28376ac", "requestId": "req-09ae8e2b3cc3404885263011676cafdf"}
+
+event: sources
+data: [{"docId": "11035a02-215a-4df8-b470-68f8abda68eb", "chunkId": "16419b60-cfd2-4b90-a51d-2bd777a6a36b", "title": "P1_信誉分规则.docx", "location": "四、恢复规则 · 段落 18", "content": "每天最多恢复 3 分，信誉分最高恢复到 100 分。", "kind": "text", "version": 1, "originalUrl": "/api/documents/11035a02-215a-4df8-b470-68f8abda68eb/original?version=1"}]
+
+event: token
+data: {"text": "根据"}
+
+event: token
+data: {"text": "信誉"}
+
+event: token
+data: {"text": "分"}
+
+event: token
+data: {"text": "恢复"}
+
+event: token
+data: {"text": "规则"}
+
+event: token
+data: {"text": "，"}
+
+event: token
+data: {"text": "信誉"}
+
+event: token
+data: {"text": "分"}
+
+event: token
+data: {"text": "每天"}
+
+event: token
+data: {"text": "最多"}
+
+event: token
+data: {"text": "恢复"}
+
+event: token
+data: {"text": " **"}
+
+event: token
+data: {"text": "3"}
+
+event: token
+data: {"text": " "}
+
+event: token
+data: {"text": "分"}
+
+event: token
+data: {"text": "**"}
+
+event: token
+data: {"text": "，"}
+
+event: token
+data: {"text": "且"}
+
+event: token
+data: {"text": "最高"}
+
+event: token
+data: {"text": "恢复到"}
+
+event: token
+data: {"text": " "}
+
+event: token
+data: {"text": "100"}
+
+event: token
+data: {"text": " "}
+
+event: token
+data: {"text": "分"}
+
+event: token
+data: {"text": "。["}
+
+event: token
+data: {"text": "1"}
+
+event: token
+data: {"text": "]"}
+
+event: done
+data: {"session": {"id": "02243e2275074fd89602118e1e13e61b", "title": "信誉分每天最多恢复多少分？", "kbIds": ["a6f036b0-14b9-45ff-97c7-f93978c04869"], "messages": [{"id": "263e73aa58864884bb316370650b122e", "role": "user", "content": "信誉分每天最多恢复多少分？"}, {"id": "b5901d844d134fbcb9fe7723d28376ac", "role": "assistant", "content": "根据信誉分恢复规则，信誉分每天最多恢复 **3 分**，且最高恢复到 100 分。[1]", "status": "complete", "sources": [{"docId": "11035a02-215a-4df8-b470-68f8abda68eb", "chunkId": "16419b60-cfd2-4b90-a51d-2bd777a6a36b", "title": "P1_信誉分规则.docx", "location": "四、恢复规则 · 段落 18", "content": "每天最多恢复 3 分，信誉分最高恢复到 100 分。", "kind": "text", "version": 1, "originalUrl": "/api/documents/11035a02-215a-4df8-b470-68f8abda68eb/original?version=1"}], "tokens": 53, "duration": 8.7494}], "updatedAt": "10/28 21:22", "modelConfigId": "3ffbb217-d4c8-43f8-a463-582eb5b2bf71"}, "message": {"id": "b5901d844d134fbcb9fe7723d28376ac", "role": "assistant", "content": "根据信誉分恢复规则，信誉分每天最多恢复 **3 分**，且最高恢复到 100 分。[1]", "status": "complete", "sources": [{"docId": "11035a02-215a-4df8-b470-68f8abda68eb", "chunkId": "16419b60-cfd2-4b90-a51d-2bd777a6a36b", "title": "P1_信誉分规则.docx", "location": "四、恢复规则 · 段落 18", "content": "每天最多恢复 3 分，信誉分最高恢复到 100 分。", "kind": "text", "version": 1, "originalUrl": "/api/documents/11035a02-215a-4df8-b470-68f8abda68eb/original?version=1"}], "tokens": 53, "duration": 8.7494}, "log": {"id": "req-09ae8e2b3cc3404885263011676cafdf", "question": "信誉分每天最多恢复多少分？", "answer": "根据信誉分恢复规则，信誉分每天最多恢复 **3 分**，且最高恢复到 100 分。[1]", "model": "deepseek-flash", "kbName": "ai客服", "status": "success", "tokens": 1881, "inputTokens": 178, "outputTokens": 53, "duration": 8.7494, "firstToken": 8.7199, "time": "10/28 21:21", "createdAt": "2026-10-28T13:21:59.945405+00:00", "role": "管理员", "source": "chat", "steps": [{"name": "向量检索", "model": "BAAI/bge-small-zh-v1.5", "duration": 0.0099, "tokens": null, "status": "成功", "meter": "local"}, {"name": "中文关键词检索", "model": "jieba / BM25", "duration": 0.0003, "tokens": null, "status": "成功", "meter": "local"}, {"name": "结果重排", "model": "sensenova-6.8-flash-lite", "duration": 7.2803, "tokens": 1650, "status": "成功"}, {"name": "回答生成", "model": "deepseek-flash", "duration": 1.3618, "tokens": 231, "status": "成功"}], "retrievalQuery": "信誉分每天最多恢复多少分？", "finishedAt": "2026-10-28T13:22:08.697220+00:00", "sources": [{"docId": "11035a02-215a-4df8-b470-68f8abda68eb", "chunkId": "16419b60-cfd2-4b90-a51d-2bd777a6a36b", "title": "P1_信誉分规则.docx", "location": "四、恢复规则 · 段落 18", "content": "每天最多恢复 3 分，信誉分最高恢复到 100 分。", "kind": "text", "version": 1, "originalUrl": "/api/documents/11035a02-215a-4df8-b470-68f8abda68eb/original?version=1"}]}}
+

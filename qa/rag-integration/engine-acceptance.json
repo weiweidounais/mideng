@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "content": "# 验收测试资料\n\n差旅报销需要发票和审批单。此资料仅供本地引擎验收，不属于业务知识库。",
+      "source": "/Users/Apple_501/Desktop/工作台/enterprise-kb/backend/.runtime/knowledge-rag/documents/0c1e86d01aa346a1d68a296d425504c6b85de8742bb2f291c90f3a29d7438ef0/c1514c6cdad166c18aa557dc1d780ba84c0e32df7633235385023eb429377e74.md",
+      "filename": "c1514c6cdad166c18aa557dc1d780ba84c0e32df7633235385023eb429377e74.md",
+      "category": "0c1e86d01aa346a1d68a296d425504c6b85de8742bb2f291c90f3a29d7438ef0",
+      "chunk_index": 0,
+      "score": 1.0,
+      "raw_rrf_score": 0.008668,
+      "reranker_score": null,
+      "semantic_rank": 1,
+      "bm25_rank": null,
+      "search_method": "semantic",
+      "keywords": [
+        ""
+      ],
+      "routed_by": "none"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+Codex 验收回修（2026-10-29 12:00+）：
+- 侧栏只留「协同工作台」→ #/collaboration（服务端）
+- 旧 #/requirements|/contracts|/exceptions 也进同一页，不再用 localStorage 双轨
+- 例外「只看与我相关」默认开；设计可从需求包一键挂 BOM；催办写备注可见；版本冲突类型

@@ -1,0 +1,242 @@
+{
+  "session": {
+    "id": "9dfab2645d944ce8b54e54932150961a",
+    "title": "辱骂其他玩家会扣多少信誉分，还会受到什么处罚？",
+    "kbIds": [
+      "a6f036b0-14b9-45ff-97c7-f93978c04869"
+    ],
+    "messages": [
+      {
+        "id": "89780964853b496a9a21abda4382af6e",
+        "role": "user",
+        "content": "辱骂其他玩家会扣多少信誉分，还会受到什么处罚？"
+      },
+      {
+        "id": "eae79c2934e44317bd49485b883e6e93",
+        "role": "assistant",
+        "content": "辱骂其他玩家每次扣 3 分信誉分，同时会受到禁言 1-7 天的处罚。[1][2]",
+        "status": "complete",
+        "sources": [
+          {
+            "docId": "4d58fb50-633e-4733-850f-cd90165bb1d9",
+            "chunkId": "5fc4f07e-e2c8-40d0-9016-729c5e96f645",
+            "title": "P2_违规处罚标准_公开版_结构化.md",
+            "location": "违规处罚标准（公开版） / 四、言论 · 第 23 行",
+            "content": "## 四、言论\n\n- 辱骂其他玩家、发布违规言论：禁言 1-7 天，同时按《信誉分规则》扣分。",
+            "kind": "text",
+            "version": 1,
+            "originalUrl": "/api/documents/4d58fb50-633e-4733-850f-cd90165bb1d9/original?version=1"
+          },
+          {
+            "docId": "11035a02-215a-4df8-b470-68f8abda68eb",
+            "chunkId": "9337222c-9e67-4f16-b6e8-e994efb727ec",
+            "title": "P1_信誉分规则.docx",
+            "location": "二、扣分标准 · 表格 1",
+            "content": "行为 | 扣分\n--- | ---\n挂机（对局中长时间没有操作） | 每局扣 5 分\n恶意送人头 | 每局扣 8 分\n辱骂其他玩家 | 每次扣 3 分\n消极比赛（如故意不参加团战） | 每局扣 2 分\n | ",
+            "kind": "table",
+            "version": 1,
+            "originalUrl": "/api/documents/11035a02-215a-4df8-b470-68f8abda68eb/original?version=1"
+          },
+          {
+            "docId": "4d58fb50-633e-4733-850f-cd90165bb1d9",
+            "chunkId": "a51adbcd-af68-45c7-9705-c792cc1c1f2c",
+            "title": "P2_违规处罚标准_公开版_结构化.md",
+            "location": "违规处罚标准（公开版） / 三、对局行为 · 第 18 行",
+            "content": "## 三、对局行为\n\n- 挂机、恶意送人头、消极比赛：按《信誉分规则》扣分。\n- 30 天内因同类行为扣分 3 次以上，禁赛 1-7 天。",
+            "kind": "text",
+            "version": 1,
+            "originalUrl": "/api/documents/4d58fb50-633e-4733-850f-cd90165bb1d9/original?version=1"
+          },
+          {
+            "docId": "6f21f130-8693-4ebe-a34b-074449d5debe",
+            "chunkId": "c62ba927-1607-42aa-9719-cadfa4faba4b",
+            "title": "P3_举报与申诉流程.docx",
+            "location": "一、举报 · 段落 5",
+            "content": "可举报的类型：外挂、挂机、恶意送人头、辱骂、代练。",
+            "kind": "text",
+            "version": 1,
+            "originalUrl": "/api/documents/6f21f130-8693-4ebe-a34b-074449d5debe/original?version=1"
+          },
+          {
+            "docId": "4d58fb50-633e-4733-850f-cd90165bb1d9",
+            "chunkId": "7536a374-1254-4945-9cdc-f34683f98da1",
+            "title": "P2_违规处罚标准_公开版_结构化.md",
+            "location": "违规处罚标准（公开版） · 第 1 行",
+            "content": "# 违规处罚标准（公开版）\n\n更新日期：2026-09-01\n\n为维护公平的游戏环境，《五杀峡谷》对以下违规行为进行处罚。处罚结果以系统通知为准。",
+            "kind": "text",
+            "version": 1,
+            "originalUrl": "/api/documents/4d58fb50-633e-4733-850f-cd90165bb1d9/original?version=1"
+          }
+        ],
+        "tokens": 155,
+        "duration": 36.3285
+      }
+    ],
+    "updatedAt": "10/28 21:22",
+    "modelConfigId": "190c7114-9085-47d4-9cea-765d901ccdaf"
+  },
+  "message": {
+    "id": "eae79c2934e44317bd49485b883e6e93",
+    "role": "assistant",
+    "content": "辱骂其他玩家每次扣 3 分信誉分，同时会受到禁言 1-7 天的处罚。[1][2]",
+    "status": "complete",
+    "sources": [
+      {
+        "docId": "4d58fb50-633e-4733-850f-cd90165bb1d9",
+        "chunkId": "5fc4f07e-e2c8-40d0-9016-729c5e96f645",
+        "title": "P2_违规处罚标准_公开版_结构化.md",
+        "location": "违规处罚标准（公开版） / 四、言论 · 第 23 行",
+        "content": "## 四、言论\n\n- 辱骂其他玩家、发布违规言论：禁言 1-7 天，同时按《信誉分规则》扣分。",
+        "kind": "text",
+        "version": 1,
+        "originalUrl": "/api/documents/4d58fb50-633e-4733-850f-cd90165bb1d9/original?version=1"
+      },
+      {
+        "docId": "11035a02-215a-4df8-b470-68f8abda68eb",
+        "chunkId": "9337222c-9e67-4f16-b6e8-e994efb727ec",
+        "title": "P1_信誉分规则.docx",
+        "location": "二、扣分标准 · 表格 1",
+        "content": "行为 | 扣分\n--- | ---\n挂机（对局中长时间没有操作） | 每局扣 5 分\n恶意送人头 | 每局扣 8 分\n辱骂其他玩家 | 每次扣 3 分\n消极比赛（如故意不参加团战） | 每局扣 2 分\n | ",
+        "kind": "table",
+        "version": 1,
+        "originalUrl": "/api/documents/11035a02-215a-4df8-b470-68f8abda68eb/original?version=1"
+      },
+      {
+        "docId": "4d58fb50-633e-4733-850f-cd90165bb1d9",
+        "chunkId": "a51adbcd-af68-45c7-9705-c792cc1c1f2c",
+        "title": "P2_违规处罚标准_公开版_结构化.md",
+        "location": "违规处罚标准（公开版） / 三、对局行为 · 第 18 行",
+        "content": "## 三、对局行为\n\n- 挂机、恶意送人头、消极比赛：按《信誉分规则》扣分。\n- 30 天内因同类行为扣分 3 次以上，禁赛 1-7 天。",
+        "kind": "text",
+        "version": 1,
+        "originalUrl": "/api/documents/4d58fb50-633e-4733-850f-cd90165bb1d9/original?version=1"
+      },
+      {
+        "docId": "6f21f130-8693-4ebe-a34b-074449d5debe",
+        "chunkId": "c62ba927-1607-42aa-9719-cadfa4faba4b",
+        "title": "P3_举报与申诉流程.docx",
+        "location": "一、举报 · 段落 5",
+        "content": "可举报的类型：外挂、挂机、恶意送人头、辱骂、代练。",
+        "kind": "text",
+        "version": 1,
+        "originalUrl": "/api/documents/6f21f130-8693-4ebe-a34b-074449d5debe/original?version=1"
+      },
+      {
+        "docId": "4d58fb50-633e-4733-850f-cd90165bb1d9",
+        "chunkId": "7536a374-1254-4945-9cdc-f34683f98da1",
+        "title": "P2_违规处罚标准_公开版_结构化.md",
+        "location": "违规处罚标准（公开版） · 第 1 行",
+        "content": "# 违规处罚标准（公开版）\n\n更新日期：2026-09-01\n\n为维护公平的游戏环境，《五杀峡谷》对以下违规行为进行处罚。处罚结果以系统通知为准。",
+        "kind": "text",
+        "version": 1,
+        "originalUrl": "/api/documents/4d58fb50-633e-4733-850f-cd90165bb1d9/original?version=1"
+      }
+    ],
+    "tokens": 155,
+    "duration": 36.3285
+  },
+  "log": {
+    "id": "req-94c8eb5f2f91456c9f391f3594cee11e",
+    "question": "辱骂其他玩家会扣多少信誉分，还会受到什么处罚？",
+    "answer": "辱骂其他玩家每次扣 3 分信誉分，同时会受到禁言 1-7 天的处罚。[1][2]",
+    "model": "sensenova-6.8-flash-lite",
+    "kbName": "ai客服",
+    "status": "degraded",
+    "tokens": null,
+    "inputTokens": 627,
+    "outputTokens": 155,
+    "duration": 36.3285,
+    "firstToken": 36.2125,
+    "time": "10/28 21:22",
+    "createdAt": "2026-10-28T13:22:08.714843+00:00",
+    "role": "管理员",
+    "source": "chat",
+    "steps": [
+      {
+        "name": "向量检索",
+        "model": "BAAI/bge-small-zh-v1.5",
+        "duration": 0.0198,
+        "tokens": null,
+        "status": "成功",
+        "meter": "local"
+      },
+      {
+        "name": "中文关键词检索",
+        "model": "jieba / BM25",
+        "duration": 0.0004,
+        "tokens": null,
+        "status": "成功",
+        "meter": "local"
+      },
+      {
+        "name": "结果重排",
+        "model": "未配置或不可用",
+        "duration": 32.3777,
+        "tokens": null,
+        "status": "已降级，使用融合排序",
+        "meter": "cloud"
+      },
+      {
+        "name": "回答生成",
+        "model": "sensenova-6.8-flash-lite",
+        "duration": 3.8947,
+        "tokens": 782,
+        "status": "成功"
+      }
+    ],
+    "retrievalQuery": "辱骂其他玩家会扣多少信誉分，还会受到什么处罚？",
+    "finishedAt": "2026-10-28T13:22:45.045069+00:00",
+    "sources": [
+      {
+        "docId": "4d58fb50-633e-4733-850f-cd90165bb1d9",
+        "chunkId": "5fc4f07e-e2c8-40d0-9016-729c5e96f645",
+        "title": "P2_违规处罚标准_公开版_结构化.md",
+        "location": "违规处罚标准（公开版） / 四、言论 · 第 23 行",
+        "content": "## 四、言论\n\n- 辱骂其他玩家、发布违规言论：禁言 1-7 天，同时按《信誉分规则》扣分。",
+        "kind": "text",
+        "version": 1,
+        "originalUrl": "/api/documents/4d58fb50-633e-4733-850f-cd90165bb1d9/original?version=1"
+      },
+      {
+        "docId": "11035a02-215a-4df8-b470-68f8abda68eb",
+        "chunkId": "9337222c-9e67-4f16-b6e8-e994efb727ec",
+        "title": "P1_信誉分规则.docx",
+        "location": "二、扣分标准 · 表格 1",
+        "content": "行为 | 扣分\n--- | ---\n挂机（对局中长时间没有操作） | 每局扣 5 分\n恶意送人头 | 每局扣 8 分\n辱骂其他玩家 | 每次扣 3 分\n消极比赛（如故意不参加团战） | 每局扣 2 分\n | ",
+        "kind": "table",
+        "version": 1,
+        "originalUrl": "/api/documents/11035a02-215a-4df8-b470-68f8abda68eb/original?version=1"
+      },
+      {
+        "docId": "4d58fb50-633e-4733-850f-cd90165bb1d9",
+        "chunkId": "a51adbcd-af68-45c7-9705-c792cc1c1f2c",
+        "title": "P2_违规处罚标准_公开版_结构化.md",
+        "location": "违规处罚标准（公开版） / 三、对局行为 · 第 18 行",
+        "content": "## 三、对局行为\n\n- 挂机、恶意送人头、消极比赛：按《信誉分规则》扣分。\n- 30 天内因同类行为扣分 3 次以上，禁赛 1-7 天。",
+        "kind": "text",
+        "version": 1,
+        "originalUrl": "/api/documents/4d58fb50-633e-4733-850f-cd90165bb1d9/original?version=1"
+      },
+      {
+        "docId": "6f21f130-8693-4ebe-a34b-074449d5debe",
+        "chunkId": "c62ba927-1607-42aa-9719-cadfa4faba4b",
+        "title": "P3_举报与申诉流程.docx",
+        "location": "一、举报 · 段落 5",
+        "content": "可举报的类型：外挂、挂机、恶意送人头、辱骂、代练。",
+        "kind": "text",
+        "version": 1,
+        "originalUrl": "/api/documents/6f21f130-8693-4ebe-a34b-074449d5debe/original?version=1"
+      },
+      {
+        "docId": "4d58fb50-633e-4733-850f-cd90165bb1d9",
+        "chunkId": "7536a374-1254-4945-9cdc-f34683f98da1",
+        "title": "P2_违规处罚标准_公开版_结构化.md",
+        "location": "违规处罚标准（公开版） · 第 1 行",
+        "content": "# 违规处罚标准（公开版）\n\n更新日期：2026-09-01\n\n为维护公平的游戏环境，《五杀峡谷》对以下违规行为进行处罚。处罚结果以系统通知为准。",
+        "kind": "text",
+        "version": 1,
+        "originalUrl": "/api/documents/4d58fb50-633e-4733-850f-cd90165bb1d9/original?version=1"
+      }
+    ]
+  }
+}

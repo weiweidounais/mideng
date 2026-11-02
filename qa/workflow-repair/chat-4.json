@@ -1,0 +1,81 @@
+{
+  "session": {
+    "id": "bd60ac2d6d6d4ddea6eefdac3de6981c",
+    "title": "这款游戏的会员年费是多少钱？",
+    "kbIds": [
+      "a6f036b0-14b9-45ff-97c7-f93978c04869"
+    ],
+    "messages": [
+      {
+        "id": "e5d648adeae045f38d9df307adf2d8d8",
+        "role": "user",
+        "content": "这款游戏的会员年费是多少钱？"
+      },
+      {
+        "id": "43d48178b7da43dc9d8ab2ad664edf10",
+        "role": "assistant",
+        "content": "当前所选知识库未找到足够依据。请补充更具体的问题，或检查相关文档是否已经发布。",
+        "status": "complete",
+        "sources": [],
+        "tokens": null,
+        "duration": 5.6008
+      }
+    ],
+    "updatedAt": "10/28 21:23",
+    "modelConfigId": "190c7114-9085-47d4-9cea-765d901ccdaf"
+  },
+  "message": {
+    "id": "43d48178b7da43dc9d8ab2ad664edf10",
+    "role": "assistant",
+    "content": "当前所选知识库未找到足够依据。请补充更具体的问题，或检查相关文档是否已经发布。",
+    "status": "complete",
+    "sources": [],
+    "tokens": null,
+    "duration": 5.6008
+  },
+  "log": {
+    "id": "req-da23b8e9984848daac8674c6bfd44515",
+    "question": "这款游戏的会员年费是多少钱？",
+    "answer": "当前所选知识库未找到足够依据。请补充更具体的问题，或检查相关文档是否已经发布。",
+    "model": "",
+    "kbName": "ai客服",
+    "status": "success",
+    "tokens": 1456,
+    "inputTokens": null,
+    "outputTokens": null,
+    "duration": 5.6008,
+    "firstToken": 5.6005,
+    "time": "10/28 21:23",
+    "createdAt": "2026-10-28T13:23:18.181797+00:00",
+    "role": "管理员",
+    "source": "chat",
+    "steps": [
+      {
+        "name": "向量检索",
+        "model": "BAAI/bge-small-zh-v1.5",
+        "duration": 0.0443,
+        "tokens": null,
+        "status": "成功",
+        "meter": "local"
+      },
+      {
+        "name": "中文关键词检索",
+        "model": "jieba / BM25",
+        "duration": 0.001,
+        "tokens": null,
+        "status": "成功",
+        "meter": "local"
+      },
+      {
+        "name": "结果重排",
+        "model": "sensenova-6.8-flash-lite",
+        "duration": 5.5493,
+        "tokens": 1456,
+        "status": "成功"
+      }
+    ],
+    "retrievalQuery": "这款游戏的会员年费是多少钱？",
+    "finishedAt": "2026-10-28T13:23:23.784276+00:00",
+    "sources": []
+  }
+}

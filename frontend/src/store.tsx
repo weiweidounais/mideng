@@ -1,0 +1,30 @@
+import {createContext,useContext,useState,useEffect,useRef,type ReactNode,type Dispatch,type SetStateAction} from 'react';
+import {App as AntApp} from 'antd';
+import type {Role,View,KnowledgeBase,KnowledgeDoc,ImportTask,LogEntry,ModelConfig,Connection,ChatSession,Settings} from './types';
+import {api,json,initializeSession,setCsrf} from './api';
+type Setter<T>=Dispatch<SetStateAction<T>>;
+const VIEWS:View[]=['overview','chat','knowledge','tasks','models','observability','settings','applications','rag-workbench','collaboration','requirements','contracts','exceptions'];
+const resolveView=(raw:string):View|null=>{const v=(raw==='logs'?'observability':raw) as View;return VIEWS.includes(v)?v:null};
+const rewriteLogsHash=()=>{if(location.hash.split('/')[1]==='logs')location.replace(location.pathname+location.search+'#/observability')};
+interface AppState {role:Role|null;setRole:Setter<Role|null>;loginRole:(r:Role,password?:string)=>Promise<void>;view:View;navigate:(v:View,kbId?:string)=>void;selectedKbId:string;setSelectedKbId:Setter<string>;kbs:KnowledgeBase[];setKbs:Setter<KnowledgeBase[]>;docs:KnowledgeDoc[];setDocs:Setter<KnowledgeDoc[]>;tasks:ImportTask[];setTasks:Setter<ImportTask[]>;logs:LogEntry[];setLogs:Setter<LogEntry[]>;models:ModelConfig[];setModels:Setter<ModelConfig[]>;connections:Connection[];setConnections:Setter<Connection[]>;sessions:ChatSession[];setSessions:Setter<ChatSession[]>;settings:Settings;setSettings:Setter<Settings>;notify:(text:string,type?:'success'|'error'|'info'|'warning')=>void;startImport:(kbId:string,files:File[],autoPublish:boolean,options?:Record<string,unknown>)=>Promise<void>;publishDoc:(docId:string)=>Promise<void>;retryTask:(id:string)=>Promise<void>;cancelTask:(id:string)=>Promise<void>;resetDemo:()=>void;refresh:()=>Promise<void>;backendError:string;runtime:Record<string,any>;loading:boolean;}
+const Context=createContext<AppState|null>(null);
+const defaults:Settings={retention:30,batchLimit:20,fileLimit:50,chatConcurrency:10,importConcurrency:2,rerankRequired:false};
+export function AppProvider({children}:{children:ReactNode}){
+ const {message}=AntApp.useApp();const [role,setRole]=useState<Role|null>(null);const [loading,setLoading]=useState(true);const [backendError,setBackendError]=useState('');const [runtime,setRuntime]=useState<Record<string,any>>({});
+ const [view,setView]=useState<View>(()=>{rewriteLogsHash();return resolveView(location.hash.split('/')[1]||'')||'knowledge'});const [selectedKbId,setSelectedKbId]=useState(location.hash.split('/')[2]||'');
+ const [kbs,setKbs]=useState<KnowledgeBase[]>([]);const [docs,setDocs]=useState<KnowledgeDoc[]>([]);const [tasks,setTasks]=useState<ImportTask[]>([]);const [logs,setLogs]=useState<LogEntry[]>([]);const [models,setModels]=useState<ModelConfig[]>([]);const [connections,setConnections]=useState<Connection[]>([]);const [sessions,setSessions]=useState<ChatSession[]>([]);const [settings,setSettings]=useState<Settings>(defaults);
+ const notify=(text:string,type:'success'|'error'|'info'|'warning'='success')=>{void message[type](text)};
+ const navigate=(v:View,kbId?:string)=>{setSelectedKbId(kbId||'');setView(v);location.hash=`/${v}${kbId?'/'+kbId:''}`};
+ const inFlight=useRef(false);const live=useRef(true);
+ const refresh=async()=>{if(inFlight.current)return;inFlight.current=true;try{const s=await api('/state').catch(async e=>{if(e.status===401){const session=await initializeSession();if(live.current)setRole(session.authenticated?session.role:null);return api('/state')}throw e});if(!live.current)return;setKbs(s.kbs);setDocs(s.docs);setTasks(s.tasks);setLogs(s.logs);setModels(s.models);setConnections(s.connections);setSessions(s.sessions);setSettings(s.settings);setRuntime(s.runtime);setBackendError('')}catch(e){if(live.current)setBackendError((e as Error).message)}finally{inFlight.current=false}};
+ const loginRole=async(r:Role,password='')=>{const result=await api('/auth/login',json('POST',{role:r,password}));setCsrf(result.csrf);setRole(result.role);await refresh();navigate(r==='user'?'chat':'knowledge')};
+ useEffect(()=>{live.current=true;void(async()=>{try{const s=await initializeSession();if(s.authenticated)setRole(s.role);await refresh()}catch(e){if(live.current)setBackendError((e as Error).message)}finally{if(live.current)setLoading(false)}})();const timer=setInterval(()=>void refresh(),2200);const sync=()=>{rewriteLogsHash();const v=resolveView(location.hash.split('/')[1]||'');if(v){setView(v);setSelectedKbId(location.hash.split('/')[2]||'')}};window.addEventListener('hashchange',sync);return()=>{live.current=false;clearInterval(timer);window.removeEventListener('hashchange',sync)}},[]);
+ const startImport=async(kbId:string,files:File[],autoPublish:boolean,options:Record<string,unknown>={})=>{const form=new FormData();files.forEach(f=>form.append('files',f));form.append('autoPublish',String(autoPublish));Object.entries(options).forEach(([key,value])=>{if(value===undefined||value===null)return;form.append(key,typeof value==='object'?JSON.stringify(value):String(value));});await api(`/knowledge-bases/${kbId}/documents`,{method:'POST',body:form});await refresh()};
+ const action=async(path:string,success:string)=>{try{await api(path,{method:'POST'});await refresh();notify(success)}catch(e){notify((e as Error).message,'error');throw e}};
+ const publishDoc=(id:string)=>action(`/documents/${id}/publish`,'已提交索引发布任务');
+ const retryTask=(id:string)=>action(`/tasks/${id}/retry`,'已重新加入处理队列');
+ const cancelTask=(id:string)=>action(`/tasks/${id}/cancel`,'已请求停止后续处理');
+ const resetDemo=()=>notify('已切换真实后端，不能通过浏览器重置业务数据','info');
+ return <Context.Provider value={{role,setRole,loginRole,view,navigate,selectedKbId,setSelectedKbId,kbs,setKbs,docs,setDocs,tasks,setTasks,logs,setLogs,models,setModels,connections,setConnections,sessions,setSessions,settings,setSettings,notify,startImport,publishDoc,retryTask,cancelTask,resetDemo,refresh,backendError,runtime,loading}}>{children}</Context.Provider>;
+}
+export function useApp(){const value=useContext(Context);if(!value)throw new Error('AppProvider missing');return value;}

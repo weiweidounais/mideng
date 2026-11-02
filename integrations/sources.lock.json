@@ -1,0 +1,70 @@
+[
+  {
+    "name": "local-vault",
+    "url": "https://github.com/genli-ai/market-research-skills/tree/8e7ad7a5220de8b1ff4c7e6f8046e7114f402803/skills/local-vault",
+    "revision": "8e7ad7a5220de8b1ff4c7e6f8046e7114f402803",
+    "installedPath": ".agents/skills/local-vault",
+    "files": {
+      "sync.command": "24849ea9481179722911e97863e5f6e04bbb7f6f2ddab5184f71ec5c52432a03",
+      "SKILL.zh.md": "a3fe0208e4cad5d9ae72ce149125f60363ddecbaa7fbfcf8019f16e892a96060",
+      "SKILL.md": "7e572527130bf31a59c6533d14c75f4dfaa0aff8bca32ef921b8ca799336c24e",
+      "scripts/sync.py": "7589ec5373d18953b6663a14de03799a1a48a5f9a8bd8bde4c2975ce4cdce8f2",
+      "scripts/config.py": "f371f39578c33330d7b871801d0e54d77a9dfccab906d1335de672ac9602dc60",
+      "scripts/mineru_client.py": "3291d8e85feb7225e63d1f96b23712a170c26bdf110dcd3935a7b87c79c89429",
+      "scripts/.env.example": "bb65c7fd9b8b39a5b884d5d7a6dd594777551f9c587a953d35295973b2dedea2"
+    },
+    "integration": "已接入带 frontmatter 和原件链接的 Markdown Vault 导出；上游完整原件转换脚本也保留在技能目录。"
+  },
+  {
+    "name": "rag-document-ingestion-pipeline",
+    "url": "https://github.com/curiositech/windags-skills/tree/b01c87bd82e66b2e08ee874ba3df0102d9f6900f/skills/rag-document-ingestion-pipeline",
+    "revision": "b01c87bd82e66b2e08ee874ba3df0102d9f6900f",
+    "installedPath": ".agents/skills/rag-document-ingestion-pipeline",
+    "files": {
+      "SKILL.md": "66959203cd32efdd4d929f97e8776cab87858de03e6d676f5e8ee6d4200709c6"
+    },
+    "integration": "接入现有持久化入库流程，新增文本、PPTX、HTML、JSON、Notebook 与代码解析及入库质量检查。"
+  },
+  {
+    "name": "clawic-rag",
+    "url": "https://github.com/clawic/skills/tree/f825206afbf1c697202533a9187be68c7b697e0e/skills/rag",
+    "revision": "f825206afbf1c697202533a9187be68c7b697e0e",
+    "installedPath": ".agents/skills/clawic-rag",
+    "files": {
+      "_meta.json": "19e8bc13cc26f5ece9b3dbb50975dfddc88c07305e9396842b5559b517005a0f",
+      "SKILL.md": "39c2ab751ec3c755bf11d81c18e1b39fb42446b65ca147e1c23955880c76bd42",
+      "security.md": "fafc9ff06d74713d4a0c3ad8d35cc38f2866e73f73a2ab2fb8914812cfd23388",
+      "evaluation.md": "5f29a1ce0af23e88804127f4700ff012b3599a5f4c54b601a5a7f21af4413c61"
+    },
+    "integration": "保留 Qdrant + BM25 + RRF + Rerank 链路，修正关键词检索对 Embedding 的非必要依赖，并新增批量评测。"
+  },
+  {
+    "name": "rag-eval",
+    "url": "https://github.com/NVIDIA/skills/tree/d7e1e2c728579ad38174443ef22382d0fb4615b5/skills/rag-eval",
+    "revision": "d7e1e2c728579ad38174443ef22382d0fb4615b5",
+    "installedPath": ".agents/skills/rag-eval",
+    "files": {
+      "skill.oms.sig": "f43535af894dd31270d45aaea306c779c6b8d47c065919ba1b5bff36bec53d95",
+      "BENCHMARK.md": "c8f164790dcb622efb81a2fe992d620f7c24ab3e820a8ae88cfe903f7157ca26",
+      "SKILL.md": "572126a6a3e15989ba62f90fe5856b6d8eda11c9097b86889db2c6eddd612a73",
+      "skill-card.md": "d70956be04f5098d34cfeb018a5e125ec5457eb7fdfb2d373b79b7cd0ee284f9",
+      "references/result-analysis.md": "618873c4b1ac6cadcd273139c29725c9be8a7a3e207afd480a8bd1f189645c9e",
+      "references/dataset-and-conversion.md": "09dbb38b1968c75208652454850586a996f094e9e4f80a54aa3a3ad558ba90d8",
+      "references/benchmark-execution.md": "e30fa930410b5e4cb418ca0e0605d14eb324d8d45e34b5eab4d0298cf48ef144",
+      "references/evaluate-rag-cli.md": "f6887fa97ab9b82d925dd5fd481911696ab31efa7521f259cd0ce104c90305e6",
+      "eval/h100.json": "bd68a22813829b6fc4ba425d99795a58888835ae7e293bb8ef011813e4387795",
+      "eval/nvidia_hosted.json": "598ebf1470cd1584bd3ff72c2c798a431ff6bd6f8b884cfdff7f2d4634c2dd66"
+    },
+    "integration": "导出 corpus/ + train.json 原件评测包；完整 RAGAS 运行仍需 NVIDIA Blueprint、评审模型与凭证。"
+  },
+  {
+    "name": "rag-evaluate-quality",
+    "url": "https://github.com/lyonzin/knowledge-rag/tree/c28772eec31f6bb407918f497767965df0a9c2c4/skills/maintenance/rag-evaluate-quality",
+    "revision": "c28772eec31f6bb407918f497767965df0a9c2c4",
+    "installedPath": ".agents/skills/rag-evaluate-quality",
+    "files": {
+      "SKILL.md": "0d6fd431c93f5ecaeb556034f2e112b39195e9aea731058a33c057433d1532ee"
+    },
+    "integration": "独立 knowledge-rag 4.11.1 运行环境，提供本地中文 Embedding、ChromaDB 与混合检索，适配知识库权限与发布快照。"
+  }
+]

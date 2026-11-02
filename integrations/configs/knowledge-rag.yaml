@@ -1,0 +1,15 @@
+paths:
+  documents_dir: ./documents
+  data_dir: ./data
+  models_cache_dir: ./models_cache
+models:
+  embedding:
+    profile: custom
+    model: BAAI/bge-small-zh-v1.5
+    dimensions: 512
+    gpu: false
+  reranker:
+    enabled: false
+search:
+  max_results: 20
+  default_results: 5

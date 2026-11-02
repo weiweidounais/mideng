@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: knowledge
+      POSTGRES_USER: knowledge
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the project .env}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U knowledge -d knowledge"]
+      interval: 5s
+      retries: 12
+    restart: unless-stopped
+  qdrant:
+    image: qdrant/qdrant:v1.15.5
+    volumes: [qdrant_data:/qdrant/storage]
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    command: [redis-server, --appendonly, "yes"]
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      retries: 12
+    restart: unless-stopped
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment: &app_environment
+      DATABASE_URL: postgresql+psycopg://knowledge:${POSTGRES_PASSWORD}@postgres:5432/knowledge
+      QDRANT_URL: http://qdrant:6333
+      REDIS_URL: redis://redis:6379/0
+      TASK_MODE: celery
+      DATA_DIR: /data
+      SECRET_KEY: ${SECRET_KEY:?Set a stable random SECRET_KEY in the project .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      MANAGER_PASSWORD: ${MANAGER_PASSWORD:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      LANGSMITH_TRACING: "false"
+    volumes: [application_data:/data]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      qdrant: {condition: service_started}
+    healthcheck:
+      test: [CMD, uv, run, --no-sync, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+    restart: unless-stopped
+  worker:
+    build: .
+    command: [uv, run, --no-sync, celery, -A, app.worker.celery_app, worker, --loglevel=INFO, --concurrency=2]
+    environment: *app_environment
+    volumes: [application_data:/data]
+    depends_on:
+      api: {condition: service_healthy}
+    restart: unless-stopped
+volumes:
+  postgres_data:
+  qdrant_data:
+  redis_data:
+  application_data:

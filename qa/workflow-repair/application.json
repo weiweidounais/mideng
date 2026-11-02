@@ -1,0 +1,87 @@
+{
+  "name": "小峡客服 · RAG 联调验收",
+  "description": "使用三份规则资料验证检索、重排、模型生成和引用。",
+  "nodes": [
+    {
+      "id": "start",
+      "kind": "start",
+      "label": "用户问题",
+      "position": {
+        "x": 30,
+        "y": 160
+      },
+      "config": {}
+    },
+    {
+      "id": "knowledge",
+      "kind": "knowledge",
+      "label": "检索规则资料",
+      "position": {
+        "x": 300,
+        "y": 160
+      },
+      "config": {
+        "kbIds": [
+          "a6f036b0-14b9-45ff-97c7-f93978c04869"
+        ],
+        "query": "{{input}}",
+        "topK": 5,
+        "minScore": 0.3,
+        "rerank": true
+      }
+    },
+    {
+      "id": "answer",
+      "kind": "llm",
+      "label": "SenseNova 有据回答",
+      "position": {
+        "x": 580,
+        "y": 160
+      },
+      "config": {
+        "modelConfigId": "190c7114-9085-47d4-9cea-765d901ccdaf",
+        "prompt": "只根据以下知识片段回答问题，每个事实引用对应编号，不虚构。无依据则说明资料未提供。\n问题：{{input}}\n资料：{{context}}",
+        "requireEvidence": true,
+        "maxOutput": 2048
+      }
+    },
+    {
+      "id": "output",
+      "kind": "output",
+      "label": "返回答案",
+      "position": {
+        "x": 860,
+        "y": 160
+      },
+      "config": {
+        "template": "{{answer.output}}"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "start",
+      "target": "knowledge",
+      "sourceHandle": null
+    },
+    {
+      "id": "e2",
+      "source": "knowledge",
+      "target": "answer",
+      "sourceHandle": null
+    },
+    {
+      "id": "e3",
+      "source": "answer",
+      "target": "output",
+      "sourceHandle": null
+    }
+  ],
+  "id": "5e46de354a434fbfaa62d510f6c8c6d5",
+  "revision": 1,
+  "publishedRevision": null,
+  "status": "draft",
+  "updatedAt": "2026-10-28T13:23:23.808969+00:00",
+  "hasUnpublishedChanges": true
+}

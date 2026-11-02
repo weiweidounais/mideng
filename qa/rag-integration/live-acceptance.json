@@ -1,0 +1,14 @@
+{
+  "syncStatus": 200,
+  "sync": {
+    "indexedDocuments": 3,
+    "snapshot": "87b516f8745720452e60dbcc9f09e34206d297a756beb264742ef34c1d2e9adb"
+  },
+  "searchStatus": 200,
+  "hitCount": 5,
+  "firstHit": "P1_信誉分规则.docx",
+  "evaluationStatus": 200,
+  "reportId": "eval-deffd16c82b94ea993b2d557bbb36b35",
+  "completed": 1,
+  "scope": "one smoke-test query; not a quality benchmark"
+}

@@ -1,0 +1,11 @@
+import '@ant-design/v5-patch-for-react-19';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import {ConfigProvider,App as AntApp} from 'antd';
+import zhCN from 'antd/locale/zh_CN';
+import {AppProvider} from './store';
+import {DemandProvider} from './demand/store';
+import App from './App';
+import {RecoveryBoundary} from './components/RecoveryBoundary';
+import './styles.css';
+ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><ConfigProvider locale={zhCN} theme={{token:{colorPrimary:'#6159e8',colorInfo:'#6159e8',colorSuccess:'#20a778',colorWarning:'#dd9b35',colorError:'#df636a',borderRadius:9,fontFamily:'Inter, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif',fontSize:13,colorText:'#252735',colorTextSecondary:'#858896',colorBorder:'#e5e7ee',controlHeight:36},components:{Button:{primaryShadow:'0 3px 7px rgba(97,89,232,.13)'},Modal:{paddingContentHorizontalLG:28},Tabs:{titleFontSize:13},Table:{headerBg:'#f8f9fc',headerColor:'#858896',rowHoverBg:'#fafaff',cellPaddingBlock:15}}}}><AntApp><RecoveryBoundary><AppProvider><DemandProvider><App/></DemandProvider></AppProvider></RecoveryBoundary></AntApp></ConfigProvider></React.StrictMode>);
