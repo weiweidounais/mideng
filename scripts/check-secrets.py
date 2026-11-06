@@ -54,7 +54,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--staged", action="store_true", help="inspect all files in the index, including unchanged tracked files")
     args = parser.parse_args()
-    names = git("ls-files", "-z").decode("utf-8").split("\0")
+    names = git("ls-files", "--cached", "--others", "--exclude-standard", "-z").decode("utf-8").split("\0")
     problems = []
     for name in filter(None, names):
         try:

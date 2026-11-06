@@ -1,0 +1,48 @@
+
+> zhixu-knowledge-hub@0.1.0 test
+> node --test scripts/test-pilot.mjs scripts/test-navigation.mjs scripts/test-forms.mjs scripts/test-trace.mjs && node scripts/test-prototype.mjs
+
+✔ unknown writes block changed input and isolate accounts without persisting payloads (18.360458ms)
+✔ a refreshed client reuses the original key for identical input after a real result lookup (11.972584ms)
+✔ a committed lost response is applied after refresh without a second mutation (2.717917ms)
+✔ multipart lost responses are recovered and changed file bytes are blocked (2.175791ms)
+✔ field errors and request IDs survive the shared error adapter (0.847416ms)
+✔ storage failure keeps the current recovery record and reports the persistence limit (1.221125ms)
+✔ BOM validation finds off-page rows, invalid dates and precise quantity limits (0.582875ms)
+✔ HTTP server failures query the original result before any retry (1.63625ms)
+✔ malformed responses remain explicit and use the original result lookup (1.7155ms)
+✔ oversized uploads are rejected before hashing or sending the original (4.712666ms)
+✔ authorized source links round trip project object kind and frozen version (0.696125ms)
+✔ invalid, repeated, unknown and incomplete location parameters are refused (0.263542ms)
+✔ legacy spool labels retain optional project until server validation (0.087166ms)
+✔ browser pagination and history filters round trip independently (0.091666ms)
+✔ trace search keeps authorized project and refuses unrelated query scopes (0.140667ms)
+✔ resolved assurance requests return to the owning exception or export section (0.16ms)
+✔ upload result links retain business owners across trace procurement and change routes (0.086875ms)
+✔ writes send CSRF and durable idempotency key (17.558167ms)
+✔ lost response is resolved by querying committed result before any resend (0.706916ms)
+✔ unknown outcome remains explicit when status query is unavailable (0.552292ms)
+✔ 409 retains server revision and never silently retries a conflicting edit (0.489583ms)
+✔ logout clears CSRF from subsequent requests (0.22675ms)
+✔ file uploads preserve multipart boundary generation and authenticated request headers (2.052916ms)
+✔ aborted page reads preserve abort and do not become retryable writes (0.405458ms)
+✔ a late old-session 401 cannot clear a newly signed-in session (0.372042ms)
+✔ trace import preserves explicit original timezone (2.3395ms)
+✔ invalid imports cannot masquerade as a real matching original (0.318083ms)
+✔ photo limit and HEIC errors retain original without implicit conversion (0.158834ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 335.274292
+✓ 原型初始化保留现有资料，仅补充明确标记的模拟模型
+✓ 模型字段保存、编辑与Key/口令不落盘
+✓ 删除仅改变副本，固定baseline不被引用修改，重开可恢复原型草稿
+✓ 文本读取与二进制占位明确区分，不持久化File
+✓ 检索与SSE包含明确模拟说明、来源与完成事件，不伪造tokens
+✓ 节点分流、发布快照与原型角色界面隔离
+✓ 未知路由失败关闭、模拟保存失败回滚、不触发fetch
+7 prototype adapter checks passed; no backend/network calls.

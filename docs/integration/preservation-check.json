@@ -1,0 +1,14 @@
+{
+  "local": {
+    "original_manifest_files": 170,
+    "changed_source_files": []
+  },
+  "github": {
+    "original_manifest_files": 78,
+    "changed_source_files": []
+  },
+  "normal_18410_health": {
+    "status": "ok",
+    "stage": "3-4"
+  }
+}

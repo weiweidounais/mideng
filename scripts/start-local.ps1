@@ -1,4 +1,4 @@
-param([int]$Port = 8000, [switch]$SkipBuild)
+param([int]$Port = 18430, [switch]$SkipBuild)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $npmCommand = Get-Command npm.cmd -ErrorAction SilentlyContinue
@@ -29,6 +29,6 @@ try {
     $env:PYTHONUTF8 = '1'
     $env:LANGSMITH_TRACING = 'false'
     Write-Output "Mideng: http://127.0.0.1:$Port"
-    Write-Output 'First-start passwords: DATA_DIR/bootstrap-passwords.json (default backend/.runtime). Keep this file private.'
-    & $uvExecutable run --no-sync uvicorn app.main:app --host 127.0.0.1 --port $Port
+    Write-Output 'Create the first independent administrator in the browser. Existing pilot data is retained.'
+    & $uvExecutable run --no-sync uvicorn app.pilot:app --host 127.0.0.1 --port $Port
 } finally { Pop-Location }

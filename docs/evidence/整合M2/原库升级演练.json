@@ -1,0 +1,15 @@
+{
+  "from": "pilot_010",
+  "to": "pilot_011",
+  "old_fact_tables_unchanged": true,
+  "old_table_count": 51,
+  "new_tables": [
+    "knowledge_applications",
+    "knowledge_documents",
+    "knowledge_libraries",
+    "knowledge_runs"
+  ],
+  "old_sessions_revoked_by_restore": true,
+  "original_normal_runtime_written": false,
+  "new_business_activated": 0
+}

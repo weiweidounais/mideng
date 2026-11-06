@@ -6,4 +6,4 @@ if [ ! -d node_modules ]; then npm ci --no-audit --no-fund; fi
 npm run build
 cd "$PROJECT_ROOT/backend"
 uv sync --frozen --python 3.12
-exec uv run --no-sync uvicorn app.main:app --host "${KNOWLEDGE_HOST:-127.0.0.1}" --port "${KNOWLEDGE_PORT:-8000}"
+exec uv run --no-sync uvicorn app.pilot:app --host 127.0.0.1 --port "${MIDENG_PORT:-18430}" --no-access-log

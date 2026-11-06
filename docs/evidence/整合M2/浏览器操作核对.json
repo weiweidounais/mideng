@@ -1,0 +1,43 @@
+{
+  "tool": "ego-browser",
+  "task_space": 40,
+  "checks": [
+    {
+      "name": "Browser owner upload/parse/review/publish/keyword source retrieval",
+      "passed": true
+    },
+    {
+      "name": "Published rule application eval failure rejects release and preserves inputs",
+      "passed": true
+    },
+    {
+      "name": "Canvas template edit produces new draft without replacing published snapshot",
+      "passed": true
+    },
+    {
+      "name": "Owner draft debug and reader published run use different snapshots",
+      "passed": true
+    },
+    {
+      "name": "Published v2 rollback to v1 while preserving draft",
+      "passed": true
+    },
+    {
+      "name": "Shared purchaser real original download bytes match source",
+      "passed": true
+    },
+    {
+      "name": "Revoked purchaser old location and known original URL refused",
+      "passed": true
+    },
+    {
+      "name": "Keyword page 390/768/1280/1440 widths have no document overflow",
+      "passed": true
+    },
+    {
+      "name": "Rule canvas 390/1280 has no document overflow; viewport only",
+      "passed": true
+    }
+  ],
+  "new_physical_phone_test": false
+}

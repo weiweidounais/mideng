@@ -1,0 +1,15 @@
+{
+  "source_packages": 1,
+  "proposals": 1,
+  "unverified_authors": 1,
+  "business_activated": 0,
+  "originals_verified": 0,
+  "missing_originals": 0,
+  "source": "comparison-only synthetic GitHub export",
+  "preserved_as_archive": {
+    "contracts": 1,
+    "bom": 1,
+    "decisions": 1,
+    "events": 21
+  }
+}

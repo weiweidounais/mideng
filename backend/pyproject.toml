@@ -3,13 +3,32 @@ name = "zhixu-backend"
 version = "1.0.0"
 requires-python = ">=3.12"
 dependencies = [
-  "fastapi>=0.115,<1", "uvicorn[standard]>=0.34,<1", "sqlalchemy>=2.0,<3", "alembic>=1.14,<2",
-  "psycopg[binary]>=3.2,<4", "pydantic-settings>=2.8,<3", "python-multipart>=0.0.20",
-  "cryptography>=44", "pwdlib[argon2]>=0.2", "httpx>=0.28,<1",
-  "langchain>=1.0,<2", "langchain-openai>=1.0,<2", "langchain-text-splitters>=1.0,<2",
-  "qdrant-client>=1.15,<2", "jieba>=0.42", "rank-bm25>=0.2", "celery[redis]>=5.5,<6",
-  "python-docx>=1.1", "pymupdf>=1.25,<2", "openpyxl>=3.1", "xlrd>=2.0", "pillow>=11",
-  "alibabacloud-docmind-api20220711>=1.0", "alibabacloud-tea-openapi>=0.3", "alibabacloud-tea-util>=0.3"
+  "fastapi>=0.115,<1",
+  "uvicorn[standard]>=0.34,<1",
+  "sqlalchemy>=2.0,<3",
+  "alembic>=1.14,<2",
+  "psycopg[binary]>=3.2,<4",
+  "pydantic-settings>=2.8,<3",
+  "python-multipart>=0.0.20",
+  "cryptography>=44",
+  "pwdlib[argon2]>=0.2",
+  "httpx>=0.28,<1",
+  "langchain>=1.0,<2",
+  "langchain-openai>=1.0,<2",
+  "langchain-text-splitters>=1.0,<2",
+  "qdrant-client>=1.15,<2",
+  "jieba>=0.42",
+  "rank-bm25>=0.2",
+  "celery[redis]>=5.5,<6",
+  "python-docx>=1.1",
+  "pymupdf>=1.25,<2",
+  "openpyxl>=3.1",
+  "xlrd>=2.0",
+  "pillow>=11",
+  "alibabacloud-docmind-api20220711>=1.0",
+  "alibabacloud-tea-openapi>=0.3",
+  "alibabacloud-tea-util>=0.3",
+  "qrcode>=8.2,<9",
 ]
 [dependency-groups]
 dev = ["pytest>=8", "pytest-asyncio>=0.25", "respx>=0.22"]

@@ -1,0 +1,13 @@
+
+> zhixu-knowledge-hub@0.1.0 build
+> tsc -p tsconfig.pilot.json && vite build --mode live
+
+vite v7.3.7 building client environment for live...
+transforming...
+✓ 1645 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.56 kB │ gzip:   0.41 kB
+dist/assets/index-DQNbEtKm.css   39.94 kB │ gzip:   8.50 kB
+dist/assets/index-DNBngajO.js   980.48 kB │ gzip: 314.48 kB
+✓ built in 2.48s

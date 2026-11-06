@@ -1,0 +1,14 @@
+{
+  "github": {
+    "port": 18420,
+    "no_listener": true
+  },
+  "local": {
+    "port": 18421,
+    "no_listener": true
+  },
+  "normal_18410": {
+    "status": "ok",
+    "stage": "3-4"
+  }
+}

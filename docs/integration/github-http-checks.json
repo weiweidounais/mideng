@@ -1,0 +1,99 @@
+{
+  "checks": [
+    {
+      "name": "五个独立浏览器身份获得各自岗位权限",
+      "passed": true
+    },
+    {
+      "name": "未授权身份不能读取项目",
+      "passed": true
+    },
+    {
+      "name": "伪造角色不能发布需求",
+      "passed": true
+    },
+    {
+      "name": "市场录入商务交底设计方案真实落库",
+      "passed": true
+    },
+    {
+      "name": "旧修订号被拒绝",
+      "passed": true
+    },
+    {
+      "name": "未验收交付不能推进采购",
+      "passed": true
+    },
+    {
+      "name": "设计退回重交采购验收询价下单完成",
+      "passed": true
+    },
+    {
+      "name": "需求变更后旧依据不能推进",
+      "passed": true
+    },
+    {
+      "name": "正式需求新旧版本留存",
+      "passed": true
+    },
+    {
+      "name": "依据复核保留订单事实",
+      "passed": true
+    },
+    {
+      "name": "超期决策产生例外",
+      "passed": true
+    },
+    {
+      "name": "到货决策闭环及实际JSON导出",
+      "passed": true
+    },
+    {
+      "name": "导出收益未被伪造",
+      "passed": true
+    },
+    {
+      "name": "撤权后旧会话立即拒绝",
+      "passed": true
+    },
+    {
+      "name": "真实上传解析分块进入人工复核",
+      "passed": true,
+      "status": "review"
+    },
+    {
+      "name": "真实原件下载哈希一致",
+      "passed": true
+    },
+    {
+      "name": "未配置模型时索引明确失败而非伪造成功",
+      "passed": true,
+      "task_status": "failed",
+      "error": "缺少可用的 Embedding 模型，请由管理员配置并测试对应模型和连接"
+    },
+    {
+      "name": "独立实例未配置外部模型或隐式加载凭证",
+      "passed": true
+    },
+    {
+      "name": "应用图校验通过",
+      "passed": true
+    },
+    {
+      "name": "评测失败阻止发布",
+      "passed": true
+    },
+    {
+      "name": "无需模型的规则画布真实发布运行",
+      "passed": true
+    },
+    {
+      "name": "应用草稿与发布快照独立",
+      "passed": true
+    },
+    {
+      "name": "发布历史回滚后真实运行旧快照",
+      "passed": true
+    }
+  ]
+}

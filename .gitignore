@@ -44,3 +44,9 @@ qa/windows-comparison/
 qa/collaboration-pilot/private/
 backups/
 private/
+
+# Dependency directories or local links are never source artifacts.
+/backend/.venv
+/frontend/node_modules
+/local-flow-context.json
+/local-evidence-export.zip

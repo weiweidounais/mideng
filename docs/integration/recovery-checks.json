@@ -1,0 +1,33 @@
+{
+  "checks": [
+    {
+      "name": "GitHub真实表单切块预览",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "GitHub规则元数据提取",
+      "passed": true
+    },
+    {
+      "name": "未发布文档不参与检索",
+      "passed": true
+    },
+    {
+      "name": "缺少已发布资料明确依据不足而非模型答案",
+      "passed": true
+    },
+    {
+      "name": "github真实强杀重启后业务事实与原件读回一致",
+      "passed": true,
+      "old_pid": 2054,
+      "new_pid": 2131
+    },
+    {
+      "name": "local真实强杀重启后业务事实与原件读回一致",
+      "passed": true,
+      "old_pid": 38530,
+      "new_pid": 2138
+    }
+  ]
+}

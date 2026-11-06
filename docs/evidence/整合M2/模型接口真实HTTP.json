@@ -1,0 +1,6 @@
+{
+  "retrieve": 503,
+  "retrieve_code": "MODEL_NOT_CONFIGURED",
+  "chat": 200,
+  "terminal_error": true
+}

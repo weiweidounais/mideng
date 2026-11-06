@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.json","include":["src/pilot-main.tsx","src/pilot/**/*.ts","src/pilot/**/*.tsx","src/vite-env.d.ts"]}

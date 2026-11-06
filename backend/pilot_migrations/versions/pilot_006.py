@@ -1,0 +1,19 @@
+from alembic import op
+revision='pilot_006'
+down_revision='pilot_005'
+
+def upgrade():
+    op.execute('\nCREATE TABLE change_cases (\n\tid VARCHAR NOT NULL, \n\tproject_id VARCHAR NOT NULL, \n\trevision INTEGER NOT NULL, \n\tnumber INTEGER NOT NULL, \n\tstate VARCHAR NOT NULL, \n\tdraft JSON NOT NULL, \n\tcurrent_version_id VARCHAR, \n\tcreated_by VARCHAR NOT NULL, \n\tupdated_at VARCHAR NOT NULL, \n\tPRIMARY KEY (id), \n\tFOREIGN KEY(project_id) REFERENCES pilot_projects (id), \n\tFOREIGN KEY(created_by) REFERENCES pilot_accounts (id)\n)\n\n')
+    op.execute('\nCREATE TABLE change_events (\n\tid VARCHAR NOT NULL, \n\tproject_id VARCHAR NOT NULL, \n\tcase_id VARCHAR NOT NULL, \n\tactor_id VARCHAR NOT NULL, \n\taction VARCHAR NOT NULL, \n\tbody JSON NOT NULL, \n\tat VARCHAR NOT NULL, \n\tPRIMARY KEY (id), \n\tFOREIGN KEY(project_id) REFERENCES pilot_projects (id), \n\tFOREIGN KEY(case_id) REFERENCES change_cases (id), \n\tFOREIGN KEY(actor_id) REFERENCES pilot_accounts (id)\n)\n\n')
+    op.execute('\nCREATE TABLE change_files (\n\tid VARCHAR NOT NULL, \n\tproject_id VARCHAR NOT NULL, \n\tcase_id VARCHAR NOT NULL, \n\tversion_id VARCHAR, \n\tpurpose VARCHAR NOT NULL, \n\trestricted BOOLEAN NOT NULL, \n\tname VARCHAR NOT NULL, \n\tsha256 VARCHAR NOT NULL, \n\tsize INTEGER NOT NULL, \n\tmedia_type VARCHAR NOT NULL, \n\tpath VARCHAR NOT NULL, \n\tcreated_by VARCHAR NOT NULL, \n\tPRIMARY KEY (id), \n\tFOREIGN KEY(project_id) REFERENCES pilot_projects (id), \n\tFOREIGN KEY(case_id) REFERENCES change_cases (id), \n\tFOREIGN KEY(created_by) REFERENCES pilot_accounts (id)\n)\n\n')
+    op.execute('\nCREATE TABLE change_versions (\n\tid VARCHAR NOT NULL, \n\tproject_id VARCHAR NOT NULL, \n\tcase_id VARCHAR NOT NULL, \n\tnumber INTEGER NOT NULL, \n\tbody JSON NOT NULL, \n\tpublished_at VARCHAR NOT NULL, \n\tPRIMARY KEY (id), \n\tUNIQUE (case_id, number), \n\tFOREIGN KEY(project_id) REFERENCES pilot_projects (id), \n\tFOREIGN KEY(case_id) REFERENCES change_cases (id)\n)\n\n')
+    op.execute('\nCREATE TABLE change_acks (\n\tid VARCHAR NOT NULL, \n\tversion_id VARCHAR NOT NULL, \n\tactor_id VARCHAR NOT NULL, \n\tat VARCHAR NOT NULL, \n\tPRIMARY KEY (id), \n\tUNIQUE (version_id, actor_id), \n\tFOREIGN KEY(version_id) REFERENCES change_versions (id), \n\tFOREIGN KEY(actor_id) REFERENCES pilot_accounts (id)\n)\n\n')
+    op.execute('\nCREATE TABLE change_dispositions (\n\tid VARCHAR NOT NULL, \n\tproject_id VARCHAR NOT NULL, \n\tversion_id VARCHAR NOT NULL, \n\ttarget_key VARCHAR NOT NULL, \n\tdecision VARCHAR NOT NULL, \n\texecutor_id VARCHAR NOT NULL, \n\treason VARCHAR NOT NULL, \n\tfile_ids JSON NOT NULL, \n\tsubmitted_at VARCHAR, \n\tverified_at VARCHAR, \n\tverified_by VARCHAR, \n\tPRIMARY KEY (id), \n\tUNIQUE (version_id, target_key), \n\tFOREIGN KEY(project_id) REFERENCES pilot_projects (id), \n\tFOREIGN KEY(version_id) REFERENCES change_versions (id), \n\tFOREIGN KEY(executor_id) REFERENCES pilot_accounts (id)\n)\n\n')
+    op.execute("CREATE TRIGGER change_versions_no_update BEFORE UPDATE ON change_versions BEGIN SELECT RAISE(ABORT,'immutable change evidence'); END")
+    op.execute("CREATE TRIGGER change_versions_no_delete BEFORE DELETE ON change_versions BEGIN SELECT RAISE(ABORT,'immutable change evidence'); END")
+    op.execute("CREATE TRIGGER change_acks_no_update BEFORE UPDATE ON change_acks BEGIN SELECT RAISE(ABORT,'immutable change evidence'); END")
+    op.execute("CREATE TRIGGER change_acks_no_delete BEFORE DELETE ON change_acks BEGIN SELECT RAISE(ABORT,'immutable change evidence'); END")
+    op.execute("CREATE TRIGGER change_events_no_update BEFORE UPDATE ON change_events BEGIN SELECT RAISE(ABORT,'immutable change evidence'); END")
+    op.execute("CREATE TRIGGER change_events_no_delete BEFORE DELETE ON change_events BEGIN SELECT RAISE(ABORT,'immutable change evidence'); END")
+
+def downgrade():raise RuntimeError("变更证据不可自动销毁")

@@ -1,0 +1,28 @@
+"""Append-only F5 trace identities and process evidence."""
+from alembic import op
+revision="pilot_007"
+down_revision="pilot_006"
+branch_labels=None
+depends_on=None
+def upgrade():
+    op.execute('\nCREATE TABLE trace_templates (\n\tid VARCHAR NOT NULL, \n\tproject_id VARCHAR NOT NULL, \n\tname VARCHAR NOT NULL, \n\tscope VARCHAR NOT NULL, \n\twelding BOOLEAN NOT NULL, \n\tpressure BOOLEAN NOT NULL, \n\tbasis VARCHAR NOT NULL, \n\tapproved_by VARCHAR NOT NULL, \n\tapproved_at VARCHAR NOT NULL, \n\tPRIMARY KEY (id), \n\tFOREIGN KEY(project_id) REFERENCES pilot_projects (id), \n\tFOREIGN KEY(approved_by) REFERENCES pilot_accounts (id)\n)\n\n')
+    op.execute('\nCREATE TABLE trace_orders (\n\tid VARCHAR NOT NULL, \n\tproject_id VARCHAR NOT NULL, \n\tversion_id VARCHAR NOT NULL, \n\tcode VARCHAR NOT NULL, \n\tpm_id VARCHAR NOT NULL, \n\tfactory_id VARCHAR NOT NULL, \n\tsite_id VARCHAR NOT NULL, \n\tquality_id VARCHAR NOT NULL, \n\tcreated_at VARCHAR NOT NULL, \n\tPRIMARY KEY (id), \n\tUNIQUE (id, project_id), \n\tUNIQUE (project_id, code), \n\tFOREIGN KEY(version_id, project_id) REFERENCES handoff_versions (id, project_id), \n\tFOREIGN KEY(pm_id) REFERENCES pilot_accounts (id), \n\tFOREIGN KEY(factory_id) REFERENCES pilot_accounts (id), \n\tFOREIGN KEY(site_id) REFERENCES pilot_accounts (id), \n\tFOREIGN KEY(quality_id) REFERENCES pilot_accounts (id)\n)\n\n')
+    op.execute('\nCREATE TABLE trace_spools (\n\tid VARCHAR NOT NULL, \n\tproject_id VARCHAR NOT NULL, \n\torder_id VARCHAR NOT NULL, \n\ttemplate_id VARCHAR NOT NULL, \n\tcode VARCHAR NOT NULL, \n\trevision INTEGER NOT NULL, \n\tstate VARCHAR NOT NULL, \n\tparents JSON NOT NULL, \n\tcreated_by VARCHAR NOT NULL, \n\tcreated_at VARCHAR NOT NULL, \n\tupdated_at VARCHAR NOT NULL, \n\tPRIMARY KEY (id), \n\tUNIQUE (id, project_id), \n\tUNIQUE (project_id, code), \n\tFOREIGN KEY(order_id, project_id) REFERENCES trace_orders (id, project_id), \n\tFOREIGN KEY(template_id) REFERENCES trace_templates (id), \n\tFOREIGN KEY(created_by) REFERENCES pilot_accounts (id)\n)\n\n')
+    op.execute('\nCREATE TABLE trace_welds (\n\tid VARCHAR NOT NULL, \n\tproject_id VARCHAR NOT NULL, \n\tspool_id VARCHAR NOT NULL, \n\tcode VARCHAR NOT NULL, \n\tPRIMARY KEY (id), \n\tUNIQUE (project_id, code), \n\tFOREIGN KEY(spool_id, project_id) REFERENCES trace_spools (id, project_id)\n)\n\n')
+    op.execute('\nCREATE TABLE trace_records (\n\tid VARCHAR NOT NULL, \n\tproject_id VARCHAR NOT NULL, \n\tspool_id VARCHAR NOT NULL, \n\tkind VARCHAR NOT NULL, \n\tdata JSON NOT NULL, \n\tfile_ids JSON NOT NULL, \n\tsource VARCHAR NOT NULL, \n\toccurred_at VARCHAR NOT NULL, \n\treceived_at VARCHAR NOT NULL, \n\tactor_id VARCHAR NOT NULL, \n\tcorrects_id VARCHAR, \n\tPRIMARY KEY (id), \n\tFOREIGN KEY(spool_id, project_id) REFERENCES trace_spools (id, project_id), \n\tFOREIGN KEY(actor_id) REFERENCES pilot_accounts (id), \n\tFOREIGN KEY(corrects_id) REFERENCES trace_records (id)\n)\n\n')
+    op.execute('\nCREATE TABLE trace_events (\n\tid VARCHAR NOT NULL, \n\tproject_id VARCHAR NOT NULL, \n\tspool_id VARCHAR NOT NULL, \n\taction VARCHAR NOT NULL, \n\tbody JSON NOT NULL, \n\tactor_id VARCHAR NOT NULL, \n\tat VARCHAR NOT NULL, \n\tPRIMARY KEY (id), \n\tFOREIGN KEY(spool_id, project_id) REFERENCES trace_spools (id, project_id), \n\tFOREIGN KEY(actor_id) REFERENCES pilot_accounts (id)\n)\n\n')
+    op.execute('\nCREATE TABLE trace_files (\n\tid VARCHAR NOT NULL, \n\tproject_id VARCHAR NOT NULL, \n\tspool_id VARCHAR NOT NULL, \n\tname VARCHAR NOT NULL, \n\tsha256 VARCHAR NOT NULL, \n\tsize INTEGER NOT NULL, \n\tmedia_type VARCHAR NOT NULL, \n\tpath VARCHAR NOT NULL, \n\tcreated_by VARCHAR NOT NULL, \n\tPRIMARY KEY (id), \n\tFOREIGN KEY(spool_id, project_id) REFERENCES trace_spools (id, project_id), \n\tFOREIGN KEY(created_by) REFERENCES pilot_accounts (id)\n)\n\n')
+    op.execute("CREATE TRIGGER trace_templates_no_update BEFORE UPDATE ON trace_templates BEGIN SELECT RAISE(ABORT, 'immutable trace evidence'); END")
+    op.execute("CREATE TRIGGER trace_templates_no_delete BEFORE DELETE ON trace_templates BEGIN SELECT RAISE(ABORT, 'immutable trace evidence'); END")
+    op.execute("CREATE TRIGGER trace_orders_no_update BEFORE UPDATE ON trace_orders BEGIN SELECT RAISE(ABORT, 'immutable trace evidence'); END")
+    op.execute("CREATE TRIGGER trace_orders_no_delete BEFORE DELETE ON trace_orders BEGIN SELECT RAISE(ABORT, 'immutable trace evidence'); END")
+    op.execute("CREATE TRIGGER trace_welds_no_update BEFORE UPDATE ON trace_welds BEGIN SELECT RAISE(ABORT, 'immutable trace evidence'); END")
+    op.execute("CREATE TRIGGER trace_welds_no_delete BEFORE DELETE ON trace_welds BEGIN SELECT RAISE(ABORT, 'immutable trace evidence'); END")
+    op.execute("CREATE TRIGGER trace_records_no_update BEFORE UPDATE ON trace_records BEGIN SELECT RAISE(ABORT, 'immutable trace evidence'); END")
+    op.execute("CREATE TRIGGER trace_records_no_delete BEFORE DELETE ON trace_records BEGIN SELECT RAISE(ABORT, 'immutable trace evidence'); END")
+    op.execute("CREATE TRIGGER trace_events_no_update BEFORE UPDATE ON trace_events BEGIN SELECT RAISE(ABORT, 'immutable trace evidence'); END")
+    op.execute("CREATE TRIGGER trace_events_no_delete BEFORE DELETE ON trace_events BEGIN SELECT RAISE(ABORT, 'immutable trace evidence'); END")
+    op.execute("CREATE TRIGGER trace_files_no_update BEFORE UPDATE ON trace_files BEGIN SELECT RAISE(ABORT, 'immutable trace evidence'); END")
+    op.execute("CREATE TRIGGER trace_files_no_delete BEFORE DELETE ON trace_files BEGIN SELECT RAISE(ABORT, 'immutable trace evidence'); END")
+def downgrade():
+    raise RuntimeError("重要履历迁移不做破坏性降级，恢复须使用一致备份")

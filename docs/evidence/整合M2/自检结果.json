@@ -1,0 +1,41 @@
+{
+  "milestone": "M2",
+  "checks": [
+    {
+      "check": "后端测试",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "check": "前端测试",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "check": "类型检查",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "check": "Lint",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "check": "构建",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "check": "源码凭据检查",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "check": "实际强杀与四链全包恢复",
+      "passed": true
+    }
+  ],
+  "real_model_gate": "本轮按用户2026-11-06裁决不连接模型；API已预留，真实模型效果留后续独立验收",
+  "all_passed": true
+}

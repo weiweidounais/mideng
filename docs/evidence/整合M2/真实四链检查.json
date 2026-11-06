@@ -1,0 +1,149 @@
+{
+  "environment": "isolated loopback18430 release-qa; synthetic only",
+  "checks": [
+    {
+      "name": "同一合成项目已准备正式来源/待PM复核采购/待质检管段/财务基础",
+      "passed": true
+    },
+    {
+      "name": "浏览器PM确认已到质量待到货",
+      "passed": true
+    },
+    {
+      "name": "实际分批0.1+0.2到货后才准备质量判定",
+      "passed": true
+    },
+    {
+      "name": "浏览器质量检测已放行",
+      "passed": true
+    },
+    {
+      "name": "指定工厂发运/现场安装并提交实际试压",
+      "passed": true
+    },
+    {
+      "name": "采购已归档且管段履历已完成",
+      "passed": true
+    },
+    {
+      "name": "商务采购成本未被自动变成F6会计入账",
+      "passed": true
+    },
+    {
+      "name": "四专业和批准原件已准备，留浏览器发布",
+      "passed": true
+    },
+    {
+      "name": "浏览器变更已发布",
+      "passed": true
+    },
+    {
+      "name": "本人确认与逐对象证据完成，留浏览器PM关闭",
+      "passed": true
+    },
+    {
+      "name": "实际入账后月结提交确认，留浏览器明确发布",
+      "passed": true
+    },
+    {
+      "name": "四链同一项目终态一致",
+      "passed": true
+    },
+    {
+      "name": "采购归档100.30与会计实际100.30来源各自独立",
+      "passed": true
+    },
+    {
+      "name": "错误源批次保留且未整批入账",
+      "passed": true
+    },
+    {
+      "name": "完成管段与采购经变更处置后来源允许继续",
+      "passed": true
+    },
+    {
+      "name": "付款承诺分列不并入会计实际",
+      "passed": true
+    },
+    {
+      "name": "PM仅发布汇总且普通岗位无成本数据",
+      "passed": true
+    },
+    {
+      "name": "普通岗位焊工资格脱敏",
+      "passed": true
+    },
+    {
+      "name": "外项目身份拒绝访问",
+      "passed": true
+    },
+    {
+      "name": "实际证据包所有文件哈希一致",
+      "passed": true
+    },
+    {
+      "name": "PM包无财务源批次或认证字段",
+      "passed": true
+    },
+    {
+      "name": "其他账号不能猜包下载",
+      "passed": true
+    },
+    {
+      "name": "撤销成员后旧会话立即拒绝项目",
+      "passed": true
+    },
+    {
+      "name": "恢复合成成员后重新按当前权限读取",
+      "passed": true
+    },
+    {
+      "name": "合成财务证据包实际生成后再撤权",
+      "passed": true
+    },
+    {
+      "name": "撤权后已知财务源文件拒绝",
+      "passed": true
+    },
+    {
+      "name": "撤权后旧请求结果回查拒绝",
+      "passed": true
+    },
+    {
+      "name": "撤权后本人旧敏感证据包拒绝",
+      "passed": true
+    },
+    {
+      "name": "恢复后权限重新核验可读源文件",
+      "passed": true
+    },
+    {
+      "name": "项目经理复核到货质量验收商务合同归档闭环",
+      "passed": true
+    },
+    {
+      "name": "材料焊缝预制检测发运安装试压完成闭环",
+      "passed": true
+    },
+    {
+      "name": "管段标签与二维码真实生成",
+      "passed": true
+    },
+    {
+      "name": "模板照片原件上传关联和跨岗位预览哈希一致",
+      "passed": true
+    },
+    {
+      "name": "变更四专业批准送达本人确认对象处置关闭完整闭环",
+      "passed": true
+    },
+    {
+      "name": "错误财务源表4行整批拦截",
+      "passed": true
+    },
+    {
+      "name": "合成财务月结快照发布完成",
+      "passed": true
+    }
+  ]
+}

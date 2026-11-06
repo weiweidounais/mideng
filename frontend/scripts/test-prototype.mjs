@@ -37,14 +37,14 @@ await check('原型初始化保留现有资料，仅补充明确标记的模拟�
   assert.equal((await req('/session')).role, 'admin');
 });
 await check('模型字段保存、编辑与Key/口令不落盘', async () => {
-  const result = await req('/models/configure', 'POST', {connectionMode: 'new', name: '自定义原型模型', provider: 'OpenRouter', type: 'LLM', api_key: 'key-must-never-persist', base_url: 'https://unused.invalid/v1', model: 'user/model'});
+  const result = await req('/models/configure', 'POST', {connectionMode: 'new', name: '自定义原型模型', provider: 'OpenRouter', type: 'LLM', api_key: 'fake-no-persist', base_url: 'https://unused.invalid/v1', model: 'user/model'});
   assert.equal(result.model.modelId, 'user/model');
   assert.equal(result.connection.baseUrl, 'https://unused.invalid/v1');
   assert.equal(result.connection.keyConfigured, true);
   await req(`/models/${result.model.id}/configure`, 'PATCH', {connectionMode: 'existing', connectionId: result.connection.id, name: '改名', modelId: 'user/model'});
-  await req('/auth/password', 'POST', {role: 'admin', oldPassword: 'old-should-not-persist', password: 'password-should-not-persist'});
+  await req('/auth/password', 'POST', {role: 'admin', oldPassword: 'old-test-only', password: 'pass-test-only'});
   const saved = memory.get(PROTOTYPE_STORAGE_KEY);
-  for (const secret of ['key-must-never-persist', 'old-should-not-persist', 'password-should-not-persist']) assert.ok(!saved.includes(secret));
+  for (const secret of ['fake-no-persist', 'old-test-only', 'pass-test-only']) assert.ok(!saved.includes(secret));
   const tested = await req(`/models/${result.model.id}/test`, 'POST', {});
   assert.ok(tested.message.startsWith('本地原型模拟'));
   assert.equal(tested.usage, null);
@@ -106,14 +106,14 @@ await check('节点分流、发布快照与原型角色界面隔离', async () =
   assert.equal(first.tokens, null);
   const edited = structuredClone(graph); edited.nodes[2].config.template = '未发布内容';
   await req(`/applications/${app.id}`, 'PATCH', {...edited, expectedRevision: 1});
-  await req('/auth/login', 'POST', {role: 'user', password: 'role-password-never-saved'});
+  await req('/auth/login', 'POST', {role: 'user', password: 'role-test-only'});
   const metadata = await req(`/applications/${app.id}`); assert.equal(metadata.nodes, undefined);
   assert.equal((await req(`/applications/${app.id}/run`, 'POST', {input: '采购设备', mode: 'published'})).output, '采购指引：采购设备');
   await assert.rejects(req(`/applications/${app.id}/run`, 'POST', {input: '采购设备', mode: 'draft'}), error => error.status === 403);
   await req('/auth/login', 'POST', {role: 'admin'});
   const exported = await req('/configuration-export');
   assert.equal(exported.prototype, true); assert.ok(exported.applications.length);
-  assert.ok(!JSON.stringify(exported).includes('role-password-never-saved'));
+  assert.ok(!JSON.stringify(exported).includes('role-test-only'));
 });
 await check('未知路由失败关闭、模拟保存失败回滚、不触发fetch', async () => {
   const before = JSON.stringify(adapter.snapshot());

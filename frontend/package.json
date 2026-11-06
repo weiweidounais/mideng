@@ -4,14 +4,17 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --mode live",
-    "dev:prototype": "vite --host 127.0.0.1 --mode prototype",
-    "build": "tsc -b && vite build",
+    "dev": "vite --host 127.0.0.1 --mode live --port 15174",
+    "build": "tsc -p tsconfig.pilot.json && vite build --mode live",
     "preview": "vite preview --host 127.0.0.1",
-    "dev:live": "vite --host 127.0.0.1 --mode live --port 5174",
+    "dev:live": "vite --host 127.0.0.1 --mode live --port 15174",
     "build:prototype": "tsc -b && vite build --mode prototype --outDir dist-prototype",
     "preview:prototype": "vite preview --mode prototype --outDir dist-prototype --host 127.0.0.1 --port 5173 --strictPort",
-    "test:prototype": "node scripts/test-prototype.mjs"
+    "test:prototype": "node scripts/test-prototype.mjs",
+    "typecheck": "tsc -p tsconfig.pilot.json",
+    "lint": "eslint src/pilot src/pilot-main.tsx",
+    "build:legacy": "tsc -p tsconfig.legacy.json && vite build --config vite.legacy.config.ts",
+    "test": "node --test scripts/test-pilot.mjs scripts/test-navigation.mjs scripts/test-forms.mjs scripts/test-trace.mjs && node scripts/test-prototype.mjs"
   },
   "dependencies": {
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
@@ -29,7 +32,10 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.4",
+    "eslint": "10.14.0",
+    "eslint-plugin-react-hooks": "7.1.1",
     "typescript": "~5.9.3",
+    "typescript-eslint": "8.72.1",
     "vite": "^7.1.12"
   }
 }
