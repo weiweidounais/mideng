@@ -1,4 +1,4 @@
-Mideng public synthetic demo
-Source commit: b7e74c152f30383391d52510a4ff7a1e2e0488db
-All feature navigation entries retained.
-No enterprise backend, accounts, files, or model connection.
+Mideng public demo
+Source commit: 5f7e70e50bd4bb1bce9671120e0f0f8fb0b0714c
+Browser-only temporary knowledge imports. Uploaded selections remain in page memory; no backend/model requests.
+All navigation entries retained.
