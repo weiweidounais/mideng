@@ -1,0 +1,17 @@
+# Verified false positives: SHA-256 source-file checksums, not credentials.
+# Exact commit/file/rule/line fingerprints only. See docs/integration/Gitleaks-false-positives.md.
+f860b524d64b4dae890482a5a2ce6906286e7660:docs/integration/source-manifest-before.json:generic-api-key:5
+f860b524d64b4dae890482a5a2ce6906286e7660:docs/integration/source-manifest-before.json:generic-api-key:22
+f860b524d64b4dae890482a5a2ce6906286e7660:docs/integration/source-manifest-before.json:generic-api-key:23
+f860b524d64b4dae890482a5a2ce6906286e7660:docs/integration/source-manifest-before.json:generic-api-key:32
+f860b524d64b4dae890482a5a2ce6906286e7660:docs/integration/source-manifest-before.json:generic-api-key:38
+f860b524d64b4dae890482a5a2ce6906286e7660:docs/integration/source-manifest-before.json:generic-api-key:40
+f860b524d64b4dae890482a5a2ce6906286e7660:docs/integration/source-manifest-before.json:generic-api-key:47
+f860b524d64b4dae890482a5a2ce6906286e7660:docs/integration/source-manifest-before.json:generic-api-key:55
+f860b524d64b4dae890482a5a2ce6906286e7660:docs/integration/source-manifest-before.json:generic-api-key:96
+f860b524d64b4dae890482a5a2ce6906286e7660:docs/integration/source-manifest-before.json:generic-api-key:101
+f860b524d64b4dae890482a5a2ce6906286e7660:docs/integration/source-manifest-before.json:generic-api-key:104
+f860b524d64b4dae890482a5a2ce6906286e7660:docs/integration/source-manifest-before.json:generic-api-key:200
+f860b524d64b4dae890482a5a2ce6906286e7660:docs/integration/source-manifest-before.json:generic-api-key:216
+f860b524d64b4dae890482a5a2ce6906286e7660:docs/integration/source-manifest-before.json:generic-api-key:221
+f860b524d64b4dae890482a5a2ce6906286e7660:docs/integration/source-manifest-before.json:generic-api-key:245
