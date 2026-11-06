@@ -58,7 +58,8 @@ export function runRule(d:RuleDefinition,input:string){
  if(!values.has(ends[0].id)||!answer)throw new Error('没有可到达的有效输出，请核对连线。');
  return {output:answer,steps:reached};
 }
-export const demoDocs=[
- {id:'policy',title:'材料采购与到货验收示例',text:'项目经理核对订购数量与约定到货时间。质量人员在材料实际到货后验收，验收合格再交商务归档采购合同与成本。',source:'合成制度 · 第1节'},
- {id:'change',title:'项目变更协作示例',text:'设计、成本、进度、质量分别核对影响，登记批准依据。通知送达与本人确认分开记录，逐个对象完成处置后由项目经理关闭变更。',source:'合成制度 · 第2节'},
+export type KnowledgeDocument = {id:string;title:string;text:string;source:string} & ({kind:'sample'} | {kind:'temporary';original:File;fingerprint:string});
+export const demoDocs:KnowledgeDocument[]=[
+ {id:'policy',kind:'sample',title:'材料采购与到货验收示例',text:'项目经理核对订购数量与约定到货时间。质量人员在材料实际到货后验收，验收合格再交商务归档采购合同与成本。',source:'合成制度 · 第1节'},
+ {id:'change',kind:'sample',title:'项目变更协作示例',text:'设计、成本、进度、质量分别核对影响，登记批准依据。通知送达与本人确认分开记录，逐个对象完成处置后由项目经理关闭变更。',source:'合成制度 · 第2节'},
 ];

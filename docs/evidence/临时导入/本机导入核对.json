@@ -1,0 +1,11 @@
+{
+  "fileChooser": true,
+  "importAndSearch": true,
+  "plainText": {
+    "expanded": "# 临时导入合成资料\r\n\r\n本地导入-验收618：这是一份合成材料采购记录。\r\n<img src=\"https://example.invalid/image\" onerror=\"window.unexpectedImportScript=true\">\r\n<script>window.unexpectedImportScript=true</script>\r\n",
+    "activeElements": 0,
+    "scriptExecuted": false
+  },
+  "originalBytesUnchanged": true,
+  "originalName": "临时导入验收.md"
+}

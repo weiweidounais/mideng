@@ -1,0 +1,54 @@
+{
+  "checks": [
+    {
+      "file": "临时导入验收.md",
+      "rejected": true,
+      "existingPreserved": true
+    },
+    {
+      "file": "不支持.pdf",
+      "rejected": true,
+      "existingPreserved": true
+    },
+    {
+      "file": "伪装文本.txt",
+      "rejected": true,
+      "existingPreserved": true
+    },
+    {
+      "file": "超大.txt",
+      "rejected": true,
+      "existingPreserved": true
+    },
+    {
+      "file": "空白.txt",
+      "rejected": true,
+      "existingPreserved": true
+    }
+  ],
+  "utf16AndCsv": true,
+  "navigationPreservesFiles": true,
+  "singleRemove": true,
+  "clearAll": true,
+  "resetClears": true,
+  "refreshClears": true,
+  "exceptions": [],
+  "requests": [
+    {
+      "url": "http://127.0.0.1:18432/mideng/",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:18432/mideng/assets/demo-CZI07Ao3.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:18432/mideng/assets/demo-iKbmaQQX.css",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:18432/mideng/favicon.svg",
+      "method": "GET"
+    }
+  ]
+}
