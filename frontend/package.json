@@ -14,7 +14,10 @@
     "typecheck": "tsc -p tsconfig.pilot.json",
     "lint": "eslint src/pilot src/pilot-main.tsx",
     "build:legacy": "tsc -p tsconfig.legacy.json && vite build --config vite.legacy.config.ts",
-    "test": "node --test scripts/test-pilot.mjs scripts/test-navigation.mjs scripts/test-forms.mjs scripts/test-trace.mjs && node scripts/test-prototype.mjs"
+    "test": "node --test scripts/test-pilot.mjs scripts/test-navigation.mjs scripts/test-forms.mjs scripts/test-trace.mjs && node scripts/test-prototype.mjs",
+    "build:demo": "tsc -p tsconfig.demo.json && vite build --config vite.demo.config.ts --mode public-demo && node scripts/prepare-demo.mjs",
+    "preview:demo": "vite preview --config vite.demo.config.ts --host 127.0.0.1 --port 18432 --strictPort",
+    "test:demo": "node --test scripts/test-demo.mjs"
   },
   "dependencies": {
     "@ant-design/v5-patch-for-react-19": "^1.0.3",

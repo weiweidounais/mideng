@@ -50,3 +50,5 @@ private/
 /frontend/node_modules
 /local-flow-context.json
 /local-evidence-export.zip
+
+/frontend/dist-demo/

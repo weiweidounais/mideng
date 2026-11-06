@@ -1,0 +1,9 @@
+{
+  "purchase_closed": true,
+  "change_closed": true,
+  "trace_closed": true,
+  "invalid_cost_blocked": true,
+  "cost_published": true,
+  "synthetic_original_downloaded": true,
+  "rule_draft_and_published_run": true
+}

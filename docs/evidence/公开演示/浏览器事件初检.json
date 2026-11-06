@@ -1,0 +1,20 @@
+[
+  {
+    "method": "Page.frameResized"
+  },
+  {
+    "method": "Page.frameScheduledNavigation"
+  },
+  {
+    "method": "Page.frameStartedLoading"
+  },
+  {
+    "method": "Page.navigatedWithinDocument"
+  },
+  {
+    "method": "Page.frameStoppedLoading"
+  },
+  {
+    "method": "Page.frameClearedScheduledNavigation"
+  }
+]
