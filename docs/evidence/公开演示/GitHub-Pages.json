@@ -1,0 +1,10 @@
+{
+  "status": "built",
+  "html_url": "https://weiweidounais.github.io/mideng/",
+  "source": {
+    "branch": "gh-pages",
+    "path": "/"
+  },
+  "build_type": "legacy",
+  "https_enforced": true
+}

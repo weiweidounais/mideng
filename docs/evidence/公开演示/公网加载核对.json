@@ -1,0 +1,36 @@
+{
+  "resources": {
+    "url": "https://weiweidounais.github.io/mideng/",
+    "title": "密灯 · 公开演示",
+    "csp": "default-src 'self'; connect-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; base-uri 'self'; form-action 'none'; object-src 'none'",
+    "resources": [
+      {
+        "url": "https://weiweidounais.github.io/mideng/assets/demo-C3_mxFk9.js",
+        "type": "script"
+      },
+      {
+        "url": "https://weiweidounais.github.io/mideng/assets/demo-BjHtLZJK.css",
+        "type": "link"
+      }
+    ]
+  },
+  "exceptions": [],
+  "network": [
+    {
+      "url": "https://weiweidounais.github.io/mideng/",
+      "method": "GET"
+    },
+    {
+      "url": "https://weiweidounais.github.io/mideng/assets/demo-C3_mxFk9.js",
+      "method": "GET"
+    },
+    {
+      "url": "https://weiweidounais.github.io/mideng/assets/demo-BjHtLZJK.css",
+      "method": "GET"
+    },
+    {
+      "url": "https://weiweidounais.github.io/mideng/favicon.svg",
+      "method": "GET"
+    }
+  ]
+}

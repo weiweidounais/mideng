@@ -1,0 +1,31 @@
+{
+  "purchaseClosed": true,
+  "syntheticSearchAndDownload": true,
+  "draftAndPublishedRuleResult": "处理建议：材料到货后安排质量验收。请由项目责任人核对。",
+  "mobileRules": {
+    "width": 390,
+    "scrollWidth": 390,
+    "overflow": false
+  },
+  "mobileNavigation": true,
+  "resetOnRefresh": true,
+  "exceptions": [],
+  "requests": [
+    {
+      "url": "https://weiweidounais.github.io/mideng/",
+      "method": "GET"
+    },
+    {
+      "url": "https://weiweidounais.github.io/mideng/assets/demo-C3_mxFk9.js",
+      "method": "GET"
+    },
+    {
+      "url": "https://weiweidounais.github.io/mideng/assets/demo-BjHtLZJK.css",
+      "method": "GET"
+    },
+    {
+      "url": "https://weiweidounais.github.io/mideng/favicon.svg",
+      "method": "GET"
+    }
+  ]
+}

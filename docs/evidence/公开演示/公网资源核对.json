@@ -1,0 +1,31 @@
+[
+  {
+    "file": "index.html",
+    "status": 200,
+    "bytes": 854,
+    "matches_local_build": true
+  },
+  {
+    "file": "favicon.svg",
+    "status": 200,
+    "bytes": 240,
+    "matches_local_build": true
+  },
+  {
+    "file": "release.txt",
+    "status": 200,
+    "bytes": 146
+  },
+  {
+    "file": "assets/demo-BjHtLZJK.css",
+    "status": 200,
+    "bytes": 44215,
+    "matches_local_build": true
+  },
+  {
+    "file": "assets/demo-C3_mxFk9.js",
+    "status": 200,
+    "bytes": 434095,
+    "matches_local_build": true
+  }
+]
