@@ -1,0 +1,17 @@
+[
+  {
+    "file": "index.html",
+    "status": 200,
+    "matches_build": true
+  },
+  {
+    "file": "assets/demo-DL5KHkhk.css",
+    "status": 200,
+    "matches_build": true
+  },
+  {
+    "file": "assets/demo-DE8hjO0f.js",
+    "status": 200,
+    "matches_build": true
+  }
+]
