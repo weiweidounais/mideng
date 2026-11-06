@@ -1,0 +1,152 @@
+[
+  {
+    "width": 1440,
+    "label": "探索知识",
+    "title": "探索知识",
+    "active": [
+      "探索知识"
+    ],
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "label": "采购流程",
+    "title": "采购流程",
+    "active": [
+      "采购流程"
+    ],
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "label": "方案流程",
+    "title": "方案流程",
+    "active": [
+      "方案流程"
+    ],
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "label": "应用生成",
+    "title": "应用生成",
+    "active": [
+      "应用生成"
+    ],
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "label": "变更与处置",
+    "title": "变更与处置",
+    "active": [
+      "变更与处置"
+    ],
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "label": "管段与质量",
+    "title": "管段与质量",
+    "active": [
+      "管段与质量"
+    ],
+    "overflow": false
+  },
+  {
+    "width": 1440,
+    "label": "成本与月结",
+    "title": "成本与月结",
+    "active": [
+      "成本与月结"
+    ],
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "label": "探索知识",
+    "title": "探索知识",
+    "active": [
+      "探索知识"
+    ],
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "label": "采购流程",
+    "title": "采购流程",
+    "active": [
+      "采购流程"
+    ],
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "label": "方案流程",
+    "title": "方案流程",
+    "active": [
+      "方案流程"
+    ],
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "label": "应用生成",
+    "title": "应用生成",
+    "active": [
+      "应用生成"
+    ],
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "label": "变更与处置",
+    "title": "变更与处置",
+    "active": [
+      "变更与处置"
+    ],
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "label": "管段与质量",
+    "title": "管段与质量",
+    "active": [
+      "管段与质量"
+    ],
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "label": "成本与月结",
+    "title": "成本与月结",
+    "active": [
+      "成本与月结"
+    ],
+    "overflow": false
+  },
+  {
+    "width": 320,
+    "businessHeaderOverflow": false
+  },
+  {
+    "width": 768,
+    "businessHeaderOverflow": false
+  },
+  {
+    "width": 1100,
+    "businessHeaderOverflow": false
+  },
+  {
+    "width": 1200,
+    "businessHeaderOverflow": false
+  },
+  {
+    "width": 1280,
+    "businessHeaderOverflow": false
+  },
+  {
+    "width": 1290,
+    "businessHeaderOverflow": false
+  }
+]

@@ -3,7 +3,7 @@ import KnowledgeExplorer from './KnowledgeExplorer';
 import RuleCanvas,{type RuleDefinition} from '../pilot/RuleCanvas';
 import {advance,demoDocs,initialRule,purchaseSteps,runRule,traceSteps} from './model';
 const sections={overview:'探索知识',procurement:'采购流程',requirements:'方案流程',applications:'应用生成',changes:'变更与处置',trace:'管段与质量',cost:'成本与月结'};
-const primarySections=['overview','procurement','requirements','applications'] as const;
+const primarySections=['overview','procurement','requirements','applications','changes','trace','cost'] as const;
 const procurementSections=['procurement','changes','trace','cost'] as const;
 type Section=keyof typeof sections;
 const roles=['项目经理','设计','采购','质量','商务','工厂','现场','财务'];
@@ -26,7 +26,7 @@ export default function DemoApp(){
  const blocked=changed&&change<changeSteps.length;
  const procurementView=procurementSections.some(key=>key===view);
  function searchKnowledge(value:string){setQuery(value);const keyword=value.trim();setHits(demoDocs.filter(doc=>(doc.title+doc.text).includes(keyword)));}
- const nav=primarySections.map(key=><button key={key} aria-current={(view===key||(key==='procurement'&&procurementView))?'page':undefined} className={'demo-nav '+((view===key||(key==='procurement'&&procurementView))?'active':'')} onClick={()=>go(key)}>{sections[key]}</button>);
+ const nav=primarySections.map(key=><button key={key} aria-current={(view===key)?'page':undefined} className={'demo-nav '+((view===key)?'active':'')} onClick={()=>go(key)}>{sections[key]}</button>);
  function operation(steps:readonly {title:string;role:string}[],step:number,work:()=>void,label:string){const next=steps[step];return next?<div className="demo-action"><span className="demo-pill">当前责任：{next.role}</span><h3>{next.title}</h3><p>先核对合成依据，再体验本节点的确认动作。</p>{role!==next.role?<button className="primary" onClick={()=>{setRole(next.role);setNotice('已切换演示角色：'+next.role);}}>切换为{next.role}继续</button>:<button className="primary" onClick={()=>action(work)}>{label}</button>}</div>:<div className="demo-action complete"><span className="demo-pill">合成流程已完成</span><h3>每一步，都留下责任与依据。</h3><p>可从导航栏选择其他板块继续体验，或使用顶部按钮重置演示。</p></div>;}
  return <div className="demo-shell">
   <div className="demo-banner"><strong>公开演示 · 全部为合成数据</strong><span>不连接企业后台，不接收真实文件；刷新后恢复初始状态。</span></div>
