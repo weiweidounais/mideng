@@ -1,0 +1,48 @@
+{
+  "url": "https://weiweidounais.github.io/mideng/#/overview",
+  "initial": {
+    "home": "探索知识",
+    "nav": [
+      "探索知识",
+      "采购流程",
+      "方案流程",
+      "应用生成"
+    ],
+    "csp": "default-src 'self'; connect-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; base-uri 'self'; form-action 'none'; object-src 'none'"
+  },
+  "search": true,
+  "journeys": [
+    {
+      "label": "采购流程",
+      "visible": true
+    },
+    {
+      "label": "方案流程",
+      "visible": true
+    },
+    {
+      "label": "应用生成",
+      "visible": true
+    }
+  ],
+  "mobile": {
+    "width": 390,
+    "overflow": false,
+    "menuClosed": true
+  },
+  "exceptions": [],
+  "requests": [
+    {
+      "url": "https://weiweidounais.github.io/mideng/",
+      "method": "GET"
+    },
+    {
+      "url": "https://weiweidounais.github.io/mideng/assets/demo-Bj5WT1ca.js",
+      "method": "GET"
+    },
+    {
+      "url": "https://weiweidounais.github.io/mideng/assets/demo-Bh1sUphQ.css",
+      "method": "GET"
+    }
+  ]
+}

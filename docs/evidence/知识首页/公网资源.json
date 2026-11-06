@@ -1,0 +1,22 @@
+[
+  {
+    "file": "index.html",
+    "status": 200,
+    "matches_build": true
+  },
+  {
+    "file": "favicon.svg",
+    "status": 200,
+    "matches_build": true
+  },
+  {
+    "file": "assets/demo-Bh1sUphQ.css",
+    "status": 200,
+    "matches_build": true
+  },
+  {
+    "file": "assets/demo-Bj5WT1ca.js",
+    "status": 200,
+    "matches_build": true
+  }
+]
