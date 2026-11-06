@@ -1,3 +1,4 @@
 Mideng public synthetic demo
-Source commit: 162893a43a7a377f1fa41d343f408f4ef8b77b09
+Source commit: 52a1b39224b4f7cddf6d8d93300c3a722c648d05
+Knowledge exploration home with procurement, scheme and application navigation.
 No enterprise backend, accounts, files, or model connection.
