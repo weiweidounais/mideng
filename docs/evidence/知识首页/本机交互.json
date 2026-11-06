@@ -1,0 +1,10 @@
+{
+  "searchAndDownload": true,
+  "emptySearchRecover": true,
+  "schemeToPurchase": true,
+  "procurementSecondLevelNavigation": true,
+  "returnToKnowledge": true,
+  "applicationRun": "处理建议：材料到货后安排质量验收。请由项目责任人核对。",
+  "legacyKnowledgeUrl": true,
+  "exceptions": []
+}

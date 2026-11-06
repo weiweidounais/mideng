@@ -1,0 +1,104 @@
+{
+  "checks": [
+    {
+      "width": 320,
+      "route": "#/overview",
+      "scrollWidth": 320,
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "route": "#/procurement",
+      "scrollWidth": 320,
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "route": "#/requirements",
+      "scrollWidth": 320,
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "route": "#/applications",
+      "scrollWidth": 320,
+      "overflow": false
+    },
+    {
+      "width": 390,
+      "route": "#/overview",
+      "scrollWidth": 390,
+      "overflow": false
+    },
+    {
+      "width": 390,
+      "route": "#/procurement",
+      "scrollWidth": 390,
+      "overflow": false
+    },
+    {
+      "width": 390,
+      "route": "#/requirements",
+      "scrollWidth": 390,
+      "overflow": false
+    },
+    {
+      "width": 390,
+      "route": "#/applications",
+      "scrollWidth": 390,
+      "overflow": false
+    },
+    {
+      "width": 768,
+      "route": "#/overview",
+      "scrollWidth": 768,
+      "overflow": false
+    },
+    {
+      "width": 768,
+      "route": "#/procurement",
+      "scrollWidth": 768,
+      "overflow": false
+    },
+    {
+      "width": 768,
+      "route": "#/requirements",
+      "scrollWidth": 768,
+      "overflow": false
+    },
+    {
+      "width": 768,
+      "route": "#/applications",
+      "scrollWidth": 768,
+      "overflow": false
+    },
+    {
+      "width": 1440,
+      "route": "#/overview",
+      "scrollWidth": 1440,
+      "overflow": false
+    },
+    {
+      "width": 1440,
+      "route": "#/procurement",
+      "scrollWidth": 1440,
+      "overflow": false
+    },
+    {
+      "width": 1440,
+      "route": "#/requirements",
+      "scrollWidth": 1440,
+      "overflow": false
+    },
+    {
+      "width": 1440,
+      "route": "#/applications",
+      "scrollWidth": 1440,
+      "overflow": false
+    }
+  ],
+  "mobileMenu": {
+    "closed": true,
+    "active": "方案流程"
+  }
+}
