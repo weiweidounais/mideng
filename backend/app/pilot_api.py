@@ -1,3 +1,4 @@
+from .pilot_service import business_roles
 """Explicit HTTP contracts for the foundation, scoped to authenticated accounts."""
 import hashlib
 import secrets
@@ -316,12 +317,12 @@ def make_router(store: Store):
                     if ':file:' in record.action:
                         from .change_models import ChangeFile
                         f=db.get(ChangeFile,record.result.get('id'))
-                        if f and f.restricted and not set(m.roles)&{'商务','财务'}:fail(404,'NOT_ACCESSIBLE','原件不存在或无访问权限')
+                        if f and f.restricted and not set(business_roles(m.roles))&{'商务','财务'}:fail(404,'NOT_ACCESSIBLE','原件不存在或无访问权限')
                     return {'result':record.result}
                 if record.action.startswith('procurement:'):
                     pid=record.action.split(':',2)[1]
                     _,m=store.membership(db,a,pid)
-                    if ':file.archive:' in record.action and not set(m.roles)&{'商务','财务'}:
+                    if ':file.archive:' in record.action and not set(business_roles(m.roles))&{'商务','财务'}:
                         fail(404,'NOT_ACCESSIBLE','原件不存在或无访问权限')
                     return {'result':record.result}
                 if record.action.startswith('handoff:'):
@@ -332,7 +333,7 @@ def make_router(store: Store):
                         from .handoff_models import Document
                         from .handoff_service import visible,EDIT
                         d=db.get(Document,record.result.get('id'))
-                        roles=store.membership(db,a,pid)[1].roles
+                        roles=business_roles(store.membership(db,a,pid)[1].roles)
                         if not d or not visible(db,d,a,roles):
                             fail(404,'NOT_ACCESSIBLE','对象不存在或无访问权限')
                         result=dict(record.result)

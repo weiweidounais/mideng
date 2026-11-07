@@ -21,7 +21,7 @@ def flow(chain):
 def base(p):return '/projects/'+p['id']+'/procurement'
 def create(flow,who='pm',key=None):
     (_,_,p,cs,people),s=flow
-    return mutation(cs[who],'POST',base(p)+'/orders',{'version_id':s['versions'][0]['id'],'title':'材料采购申请','note':'数量与交期按正式BOM核对','purchase_id':people['purchase']['id'],'quality_id':people['quality']['id'],'commerce_id':people['biz']['id']},key)
+    return mutation(cs[who],'POST',base(p)+'/orders',{'version_id':s['versions'][0]['id'],'title':'材料采购申请','note':'项目经理填写采购种类数量与需用日期','lines':[{'material':'管材','spec':'DN100','quantity':'0.3','unit':'米','need_by':'2026-12-01'}],'purchase_id':people['purchase']['id'],'quality_id':people['quality']['id'],'commerce_id':people['biz']['id']},key)
 def get(flow,who='pm'):
     (_,_,p,cs,_),_=flow;r=cs[who].get('/api'+base(p)+'/board');assert r.status_code==200,r.text;return r.json()['orders'][0]
 def act(flow,o,action,who,**extra):

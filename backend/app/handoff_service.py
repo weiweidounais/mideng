@@ -1,3 +1,5 @@
+from .pilot_service import workflow_admin
+from .pilot_service import business_roles
 import hashlib
 from datetime import datetime,timedelta,timezone
 from decimal import Decimal
@@ -11,7 +13,7 @@ EDIT={'requirement':{'市场','商务'},'scheme':{'设计'}}
 
 def role(store,db,a,pid,allowed):
     _,m=store.membership(db,a,pid)
-    if not set(m.roles).intersection(allowed):fail(403,'ACTION_FORBIDDEN','当前项目岗位无此业务操作权限')
+    if not set(business_roles(m.roles)).intersection(allowed):fail(403,'ACTION_FORBIDDEN','当前项目岗位无此业务操作权限')
     return m
 
 
@@ -30,7 +32,7 @@ def effective_member(db,pid,aid,roles=None):
     m=db.scalar(select(Membership).where(Membership.project_id==pid,Membership.account_id==aid))
     now=utcnow()
     return bool(a and a.active and m and m.active and m.valid_from<=now and (not m.valid_until or m.valid_until>now)
-                and (not roles or set(m.roles).intersection(roles)))
+                and (not roles or set(business_roles(m.roles)).intersection(roles)))
 
 
 def source_current(db,v):
@@ -216,6 +218,7 @@ def create_contract(store,db,a,pid,b,rid):
     role(store,db,a,pid,{'设计'})
     v=get(db,Version,pid,b.version_id);d=get(db,Document,pid,v.document_id)
     if d.kind!='scheme' or v.number!=d.version_no or not source_current(db,v):fail(409,'SOURCE_VERSION','仅能从当前有效正式方案/BOM创建交接')
+    if not v.body.get('bom'):fail(422,'LEGACY_BOM_REQUIRED','旧版交接仅供含历史料表的方案使用；新方案请由项目经理填写采购清单并提交采购需求')
     from .change_service import can_start
     if not can_start(db,pid,v):fail(409,'CHANGE_NOT_CONFIRMED','新来源变更确认未齐，不可新建任务')
     if not all(effective_member(db,pid,x,{'采购'}) for x in [b.recipient_id,*b.proxies]):fail(422,'INVALID_RECIPIENT','接收人及代理须为有效采购岗位')
@@ -232,7 +235,7 @@ def create_contract(store,db,a,pid,b,rid):
 
 def recipient(store,db,a,pid,c):
     role(store,db,a,pid,{'采购'})
-    if a.id not in [c.recipient_id,*c.proxies]:fail(403,'RECIPIENT_ONLY','仅指定采购接收人或授权代理可操作')
+    if a.id not in [c.recipient_id,*c.proxies] and not workflow_admin(store,db,a,pid):fail(403,'RECIPIENT_ONLY','仅指定采购接收人或授权代理可操作')
 
 
 def executable(db,c):

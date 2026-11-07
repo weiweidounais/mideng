@@ -1,3 +1,4 @@
+from .pilot_service import business_roles
 import copy,hashlib,json,re,calendar
 from pathlib import Path
 from decimal import Decimal
@@ -269,13 +270,13 @@ def close_action(store,db,a,c,b,rid):
    if prior:
     old=db.get(CostClose,prior.close_id);cas(db,CostClose,old,old.revision,state='corrected')
    from .pilot_models import Membership
-   recipients=[m.account_id for m in db.scalars(select(Membership).where(Membership.project_id==c.project_id)) if m.active and '项目经理' in m.roles]
+   recipients=[m.account_id for m in db.scalars(select(Membership).where(Membership.project_id==c.project_id)) if m.active and '项目经理' in business_roles(m.roles)]
    notify(db,c.project_id,recipients,'财务月结快照已发布：'+c.inputs['period'],'cost_snapshot',publication.id)
  cas(db,CostClose,c,b.revision,**values);event(store,db,a,c.project_id,c.id,'close.'+b.action,rid,{'reason':b.reason});return {'id':c.id,'revision':c.revision}
 
 PUBLIC=['period','currency','tax_basis','original_budget','approved_adjustments','current_budget','actual_accounting','estimate','actual_reported','estimate_included','commitment','payment','invoice','unallocated','variance','variance_rate','revenue','gross_margin','control_total','completeness','coverage','deadline','calendar_name','data_cutoff','on_time','rule_version']
 def board(store,db,a,pid):
- _,member=store.membership(db,a,pid);fin='财务' in member.roles;pm='项目经理' in member.roles;result={'can_finance':fin,'can_summary':fin or pm,'profiles':[],'calendars':[],'budgets':[],'files':[],'batches':[],'closes':[],'snapshots':[],'changes':[]}
+ _,member=store.membership(db,a,pid);fin='财务' in business_roles(member.roles);pm='项目经理' in business_roles(member.roles);result={'can_finance':fin,'can_summary':fin or pm,'profiles':[],'calendars':[],'budgets':[],'files':[],'batches':[],'closes':[],'snapshots':[],'changes':[]}
  if fin:
   result['profiles']=[dict(id=p.id,number=p.number,body=p.body,actor_id=p.actor_id,at=p.at) for p in db.scalars(select(CostProfile).where(CostProfile.project_id==pid))];result['calendars']=[dict(id=p.id,body=p.body,actor_id=p.actor_id,at=p.at) for p in db.scalars(select(CostCalendar).where(CostCalendar.project_id==pid))];result['budgets']=[dict(id=p.id,body=p.body,actor_id=p.actor_id,at=p.at) for p in db.scalars(select(CostBudget).where(CostBudget.project_id==pid))];result['files']=[file_view(f) for f in db.scalars(select(CostSource).where(CostSource.project_id==pid))];result['batches']=[batch_view(b) for b in db.scalars(select(CostBatch).where(CostBatch.project_id==pid).order_by(CostBatch.at.desc()))];result['closes']=[dict(id=c.id,revision=c.revision,state=c.state,inputs=c.inputs,body=c.body,publication_id=c.publication_id) for c in db.scalars(select(CostClose).where(CostClose.project_id==pid).order_by(CostClose.at.desc()))]
   from .change_models import ChangeCase

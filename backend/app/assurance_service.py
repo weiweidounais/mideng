@@ -1,3 +1,4 @@
+from .pilot_service import business_roles
 import hashlib,json
 from pathlib import Path
 from datetime import datetime,timedelta,timezone
@@ -13,8 +14,8 @@ def allowed(roles,a,case):return ('财务' in roles) if case.financial else ('�
 
 def access(store,db,a,pid,eid):
  _,m=store.membership(db,a,pid);e=get(db,ExceptionCase,pid,eid)
- if not allowed(m.roles,a,e):fail(404,'NOT_ACCESSIBLE','异常不存在或无访问权限')
- return e,m.roles
+ if not allowed(business_roles(m.roles),a,e):fail(404,'NOT_ACCESSIBLE','异常不存在或无访问权限')
+ return e,business_roles(m.roles)
 
 def record(db,e,action,actor=None,body=None):db.add(ExceptionEvent(id=uid(),project_id=e.project_id,exception_id=e.id,actor_id=actor.id if actor else None,action=action,body=body or {}))
 
@@ -85,7 +86,7 @@ def contracts(db):return [dict(id=x.id,name=x.name,version=x.version,body=x.body
 def export_view(e):return {k:getattr(e,k) for k in ['id','state','revision','include_sensitive','error','at','completed_at','sha256']}
 def board(store,db,a,pid):
  _,m=store.membership(db,a,pid)
- return dict(exceptions=[case_view(db,e,m.roles) for e in db.scalars(select(ExceptionCase).where(ExceptionCase.project_id==pid).order_by(ExceptionCase.detected_at.desc())) if allowed(m.roles,a,e)],exports=[export_view(x) for x in db.scalars(select(EvidenceExport).where(EvidenceExport.project_id==pid,EvidenceExport.actor_id==a.id).order_by(EvidenceExport.at.desc()))],contracts=contracts(db))
+ return dict(exceptions=[case_view(db,e,business_roles(m.roles)) for e in db.scalars(select(ExceptionCase).where(ExceptionCase.project_id==pid).order_by(ExceptionCase.detected_at.desc())) if allowed(business_roles(m.roles),a,e)],exports=[export_view(x) for x in db.scalars(select(EvidenceExport).where(EvidenceExport.project_id==pid,EvidenceExport.actor_id==a.id).order_by(EvidenceExport.at.desc()))],contracts=contracts(db))
 
 def act(store,db,a,e,roles,b,rid):
  if b.action in {'assign','waive'} and not managed(roles,e):fail(403,'EXCEPTION_MANAGER','指派/豁免须项目经理（财务异常须财务）')

@@ -31,7 +31,7 @@ class SchemeData(Strict):
     title:str=Field(min_length=1,max_length=120)
     notes:str=Field(min_length=1,max_length=8000)
     risks:str=Field(default='',max_length=4000)
-    bom:list[BomLine]=Field(min_length=1,max_length=5000)
+    bom:list[BomLine]=Field(default_factory=list,max_length=5000)
     attachment_ids:list[str]=Field(default_factory=list,max_length=20)
     review_reason:str=Field(default='',max_length=1000)
 

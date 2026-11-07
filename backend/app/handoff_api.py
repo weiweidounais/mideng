@@ -1,3 +1,4 @@
+from .pilot_service import business_roles
 import hashlib,io,json,os,tempfile,zipfile
 from pathlib import Path
 from typing import Literal
@@ -16,7 +17,7 @@ from . import handoff_service as service
 def make_handoff_router(store,actor,key):
     router=APIRouter(prefix='/projects/{pid}/handoff',tags=['需求与交接'])
 
-    def scope(db,a,pid):return store.membership(db,a,pid)[1].roles
+    def scope(db,a,pid):return business_roles(store.membership(db,a,pid)[1].roles)
 
     def readable_doc(db,a,pid,oid):
         roles=scope(db,a,pid);d=service.get(db,Document,pid,oid)
@@ -114,7 +115,7 @@ def make_handoff_router(store,actor,key):
 
     @router.post('/bom-preview',response_model=BomPreviewOut)
     async def bom_preview(pid:str,file:UploadFile=File(...),a=Depends(actor)):
-        with store.transaction() as db:service.role(store,db,a,pid,{'设计'})
+        with store.transaction() as db:service.role(store,db,a,pid,{'项目经理','设计'})
         import csv
         content=await file.read(20*1024*1024+1)
         if len(content)>20*1024*1024:fail(422,'FILE_SIZE','料表不能超过20MB')

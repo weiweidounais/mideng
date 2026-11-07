@@ -1,20 +1,28 @@
 export const sections = {requirements:'需求与方案',procurement:'交接与采购',changes:'变更与处置',trace:'管段与质量',cost:'成本与月结',assurance:'异常与证据',knowledge:'项目知识与应用'} as const;
 export type Section=keyof typeof sections;
-export type ViewRoute={project?:string;section?:Section;object?:string;version?:string;kind?:string;view?:'workbench'|'projects';page?:number;mode?:'pending'|'all';spool?:string;q?:string;error?:string};
+export const businessDesks={market:'市场业务',commerce:'商务业务'} as const;
+export type ViewRoute={project?:string;section?:Section;object?:string;version?:string;kind?:string;view?:'workbench'|'projects';panel?:'members';desk?:keyof typeof businessDesks;tab?:'documents'|'applications';action?:'new-requirement';page?:number;mode?:'pending'|'all';spool?:string;q?:string;error?:string};
 export type ObjectLink={project_id:string;section:Section;object_id:string|null;version_id:string|null;kind:string|null;title?:string;state?:string;owner_id?:string|null;due_at?:string|null};
+export function pickWorkspaceProject<T extends {id:string}>(projects:T[],routeProject?:string,preferredProject?:string):T|undefined{
+ return projects.find(project=>project.id===routeProject)??projects.find(project=>project.id===preferredProject)??projects[0];
+}
 const id=/^[a-zA-Z0-9_.:-]{1,120}$/;
 export function parseRoute(search:string):ViewRoute{
- const q=new URLSearchParams(search),known=new Set(['project','section','object','version','kind','view','page','mode','spool','q']);
+ const q=new URLSearchParams(search),known=new Set(['project','section','object','version','kind','view','page','mode','spool','q','panel','tab','action','desk']);
  for(const k of q.keys())if(!known.has(k)||q.getAll(k).length!==1)return {error:'地址含未知或重复位置参数，请返回工作台重新打开。'};
- const read=(name:string)=>q.get(name)||undefined;const project=read('project'),section=read('section'),object=read('object'),version=read('version'),kind=read('kind'),spool=read('spool'),view=read('view'),mode=read('mode'),page=read('page'),filter=read('q');
+ const read=(name:string)=>q.get(name)||undefined;const panel=read('panel'),tab=read('tab'),action=read('action'),desk=read('desk');const project=read('project'),section=read('section'),object=read('object'),version=read('version'),kind=read('kind'),spool=read('spool'),view=read('view'),mode=read('mode'),page=read('page'),filter=read('q');
  if([project,object,version,spool].some(x=>x&&!id.test(x))||(section&&!Object.hasOwn(sections,section))||(view&&!['workbench','projects'].includes(view))||(mode&&!['pending','all'].includes(mode))||(page&&(!/^\d+$/.test(page)||Number(page)<1||Number(page)>100000)))return {error:'地址中的项目、板块或页码无效，请从本人工作台重新打开。'};
+ if(panel&&(!project||panel!=='members'||(section&&section!=='requirements')||object||spool))return {error:'成员授权入口须从项目打开。'};
+ if(tab&&(!project||section!=='knowledge'||!['documents','applications'].includes(tab)||spool||panel))return {error:'资料或应用页签须从项目知识空间打开。'};
+ if(desk&&(!project||section!=='requirements'||!Object.hasOwn(businessDesks,desk)||panel||tab||spool||(kind&&kind!=='document')))return {error:'市场或商务业务须从项目需求入口打开。'};
+ if(action&&(!project||section!=='requirements'||action!=='new-requirement'||object||version||kind||panel||tab||spool))return {error:'新需求须从项目需求入口发起。'};
  if(filter&&(!project||section!=='trace'||!/^[-a-zA-Z0-9_.]{1,80}$/.test(filter)))return {error:'管段筛选地址无效，请从管段列表重新查找。'};
  if((!project&&(section||object||version||kind))||(version&&!object)||(kind&&!object)||(spool&&(section||object||version||kind)))return {error:'地址中的对象与来源范围不完整，请从原业务入口重新打开。'};
  const kinds=['document','procurement','contract','change','spool','trace_order','cost_batch','cost_close','cost_snapshot','assurance','library'];if(kind&&!kinds.includes(kind))return {error:'对象类型无法识别，请重新打开业务入口。'};
- return {q:filter,project,section:project?(section as Section||'requirements'):undefined,object,version,kind,spool,view:view as ViewRoute['view']||'workbench',mode:mode as ViewRoute['mode']||'pending',page:page?Number(page):1};
+ return {desk:desk as ViewRoute['desk'],action:action as ViewRoute['action'],tab:tab as ViewRoute['tab'],panel:panel as ViewRoute['panel'],q:filter,project,section:project?(section as Section||'requirements'):undefined,object,version,kind,spool,view:view as ViewRoute['view']||'workbench',mode:mode as ViewRoute['mode']||'pending',page:page?Number(page):1};
 }
 export function routeSearch(r:ViewRoute):string{
- const q=new URLSearchParams();if(r.project){q.set('project',r.project);q.set('section',r.section??'requirements');if(r.object)q.set('object',r.object);if(r.version)q.set('version',r.version);if(r.object&&r.kind)q.set('kind',r.kind);}else if(r.view==='projects')q.set('view','projects');if(r.project&&r.section==='trace'&&r.q)q.set('q',r.q);if((r.page??1)>1)q.set('page',String(r.page));if(!r.project&&r.mode==='all')q.set('mode','all');return q.size?'?'+q.toString():'';
+ const q=new URLSearchParams();if(r.project){q.set('project',r.project);if(r.panel)q.set('panel',r.panel);q.set('section',r.section??'requirements');if(r.desk&&r.section==='requirements')q.set('desk',r.desk);if(r.action)q.set('action',r.action);if(r.tab&&r.section==='knowledge')q.set('tab',r.tab);if(r.object)q.set('object',r.object);if(r.version)q.set('version',r.version);if(r.object&&r.kind)q.set('kind',r.kind);}else if(r.view==='projects')q.set('view','projects');if(r.project&&r.section==='trace'&&r.q)q.set('q',r.q);if((r.page??1)>1)q.set('page',String(r.page));if(!r.project&&r.mode==='all')q.set('mode','all');return q.size?'?'+q.toString():'';
 }
 export function linkRoute(link:ObjectLink):ViewRoute{return {project:link.project_id,section:link.section,object:link.object_id??undefined,version:link.version_id??undefined,kind:link.kind??undefined,page:1};}
 export function sectionFor(kind:string|null|undefined):Section{return kind==='procurement'||kind==='contract'?'procurement':kind==='change'?'changes':kind==='spool'||kind==='trace_order'?'trace':kind==='assurance'?'assurance':kind?.startsWith('cost_')?'cost':'requirements';}

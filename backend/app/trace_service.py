@@ -1,3 +1,5 @@
+from .pilot_service import workflow_admin
+from .pilot_service import business_roles
 import copy,hashlib,json
 from pathlib import Path
 from sqlalchemy import select
@@ -26,7 +28,7 @@ def originals(db,s,ids,required=True):
         if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest()!=f.sha256:fail(409,'ORIGINAL_CHANGED','原件缺失或校验不符')
 def assigned(store,db,a,s,r):
     role(store,db,a,s.project_id,{r});o=get(db,TraceOrder,s.project_id,s.order_id)
-    if a.id!=getattr(o,{'工厂':'factory_id','现场':'site_id','质量':'quality_id','项目经理':'pm_id'}[r]):fail(403,'ASSIGNED_ONLY','仅本预制订单指定的负责账号可执行')
+    if a.id!=getattr(o,{'工厂':'factory_id','现场':'site_id','质量':'quality_id','项目经理':'pm_id'}[r]) and not workflow_admin(store,db,a,s.project_id):fail(403,'ASSIGNED_ONLY','仅本预制订单指定的负责账号可执行')
     return o
 
 def source(db,s):
@@ -94,15 +96,15 @@ def template(store,db,a,pid,b,rid):
     return {'id':t.id,'revision':1}
 def order(store,db,a,pid,b,rid):
     role(store,db,a,pid,{'项目经理'});v=get(db,Version,pid,b.version_id)
-    if get(db,Document,pid,v.document_id).kind!='scheme' or not source_current(db,v) or not can_start(db,pid,v):fail(409,'SOURCE_CHANGED','须使用当前正式BOM并完成所需变更确认与处置')
+    if get(db,Document,pid,v.document_id).kind!='scheme' or not source_current(db,v) or not can_start(db,pid,v):fail(409,'SOURCE_CHANGED','须使用当前正式方案并完成所需变更确认与处置')
     for aid,r in [(b.factory_id,'工厂'),(b.site_id,'现场'),(b.quality_id,'质量')]:
         if not effective_member(db,pid,aid,{r}):fail(422,'INVALID_RECIPIENT','工厂、现场、质量须为有效项目岗位')
     o=TraceOrder(id=uid(),project_id=pid,**b.model_dump(),pm_id=a.id);db.add(o);db.flush();store.audit(db,a,'trace.order',o.id,1,rid,pid);notify(db,pid,[o.factory_id],'预制订单待逐件登记：'+o.code,'trace_order',o.id,v.id);return {'id':o.id,'revision':1}
 def spool(store,db,a,pid,b,rid):
     o=get(db,TraceOrder,pid,b.order_id);role(store,db,a,pid,{'工厂'})
-    if o.factory_id!=a.id:fail(403,'ASSIGNED_ONLY','仅指定工厂可建管段')
+    if o.factory_id!=a.id and not workflow_admin(store,db,a,pid):fail(403,'ASSIGNED_ONLY','仅指定工厂可建管段')
     t=get(db,TraceTemplate,pid,b.template_id)
-    if t.approved_by!=o.quality_id:fail(422,'TEMPLATE_OWNER','请使用本订单质量负责人确认的模板')
+    if t.approved_by!=o.quality_id and not workflow_admin(store,db,a,pid):fail(422,'TEMPLATE_OWNER','请使用本订单质量负责人确认的模板')
     v=get(db,Version,pid,o.version_id)
     if not source_current(db,v) or not can_start(db,pid,v):fail(409,'SOURCE_CHANGED','旧来源不能创建新管段，请核对新版订单与变更')
     s=Spool(id=uid(),project_id=pid,**b.model_dump(),created_by=a.id);db.add(s);db.flush();event(store,db,a,s,'create',rid);return {'id':s.id,'revision':s.revision}
@@ -196,7 +198,7 @@ def reshape(store,db,a,pid,b,rid):
     role(store,db,a,pid,{'项目经理'})
     if len({p.id for p in b.parents})!=len(b.parents) or not ((len(b.parents)==1 and len(b.codes)>1) or (len(b.parents)>1 and len(b.codes)==1)):fail(422,'SHAPE_INVALID','拆分一件生成多件；合并多件生成一件')
     parents=[get(db,Spool,pid,p.id) for p in b.parents];first=parents[0];o=get(db,TraceOrder,pid,first.order_id)
-    if a.id!=o.pm_id:fail(403,'ASSIGNED_ONLY','仅指定项目经理可登记拆并')
+    if a.id!=o.pm_id and not workflow_admin(store,db,a,pid):fail(403,'ASSIGNED_ONLY','仅指定项目经理可登记拆并')
     for s,p in zip(parents,b.parents):
         if s.order_id!=first.order_id or s.template_id!=first.template_id or s.state not in {'registered','fabricating','rework'}:fail(409,'SHAPE_STATE','拆并须同订单同模板且尚未发运/放行')
         require_source(db,s);cas(db,Spool,s,p.revision,state='retired');event(store,db,a,s,'reshape_parent',rid,{'reason':b.reason})

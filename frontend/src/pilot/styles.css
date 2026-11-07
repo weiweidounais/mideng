@@ -10,3 +10,48 @@
 @media(max-width:650px){.difference-summary{padding:12px}.difference-summary table{min-width:0}.difference-summary th,.difference-summary td{padding:12px 8px}.review-row dl{grid-template-columns:minmax(0,1fr)}.request-recovery button{white-space:normal}.replacement-picker .pager{padding:14px 0}.field-errors small{overflow-wrap:anywhere}.bom-paged-editor .bom-editor{display:block}.bom-paged-editor label{margin-bottom:16px}}
 
 .rule-canvas{height:360px;border:1px solid #d8e3e0;border-radius:8px;margin:16px 0}.rule-node{min-width:140px;max-width:200px;background:white;border:1px solid #a8bfb8;border-radius:8px;padding:12px;color:#173f36}.rule-node.selected{border:2px solid #14786c}.rule-node p{margin:5px 0}.rule-editor{max-width:100%}.rule-editor button{margin:4px}
+
+.knowledge-guide{line-height:1.9}.knowledge-guide small{display:block;margin-top:8px;font-size:12px;color:#587a6e}.knowledge-next-action{padding:11px 13px;background:#f2f7f4;border-radius:6px;font-size:12px;color:#396a55;line-height:1.9;overflow-wrap:anywhere}
+
+.workbench-context{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:0 0 22px}
+.workbench-context>label{margin:0;flex:1;max-width:540px}
+.knowledge-home{padding:26px;background:linear-gradient(115deg,#f3faf6,#fff);border:1px solid #d9e8df}
+.knowledge-home h2{font-size:26px;margin:12px 0;line-height:1.4}
+.knowledge-home>p,.department-entrances .section-heading p{color:#526f65}
+.workbench-question-form{border:1px solid #b9cec5;border-radius:12px;background:#fff;padding:16px;box-shadow:0 5px 20px #204d3610}
+.workbench-question-form label{font-size:13px;margin:0 0 12px;color:#557568}
+.workbench-question-form textarea{font:inherit;display:block;width:100%;resize:vertical;min-height:88px;max-height:260px;border:0;background:transparent;color:#213737;line-height:1.8;outline-offset:4px}
+.workbench-question-form textarea:focus-visible{outline:2px solid #8ed8cc;border-radius:4px}
+.question-form-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}
+.question-form-footer>span{font-size:12px;color:#638075}
+.question-examples{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0}
+.question-examples button{font-size:12px;padding:8px 12px;color:#3e6557;background:#eef5f0;border:1px solid #dbe7df;border-radius:18px;text-align:left;white-space:normal}
+.workbench-answer{margin-top:24px;border-top:1px solid #d6e4dc;padding-top:20px;overflow-wrap:anywhere}
+.asked-question{background:#eaf3ed;border-radius:8px;padding:12px 16px;margin-bottom:20px}
+.asked-question>span{color:#587264;font-size:12px}.asked-question p{margin:6px 0 0;white-space:pre-wrap}
+.answer-heading{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.answer-source{padding:16px;border:1px solid #dce6df;background:#fff;border-radius:8px;margin:12px 0}
+.answer-source>small{color:#5b7669;line-height:1.8;display:block}
+.answer-source blockquote{margin:12px 0;padding-left:12px;border-left:3px solid #95bcaa;white-space:pre-wrap;line-height:1.8}
+.answer-business,.all-business-links{display:flex;flex-wrap:wrap;gap:10px}.answer-business{margin-top:16px}
+.duty-grid{padding:0 26px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}
+.duty-card{min-width:0;text-align:left;border:1px solid #dce5e0;border-radius:8px;background:#fff;padding:16px;color:#294b3d;display:flex;flex-direction:column;gap:10px}
+.duty-card strong{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:15px}
+.duty-card strong span{font-size:10px;font-weight:400;background:#d8ece0;color:#1d6342;padding:3px 6px;border-radius:4px}
+.duty-card>small,.duty-card>span{font-size:12px;line-height:1.6}.duty-card>small{color:#5f776b}.duty-card>span{color:#367859;margin-top:auto}
+.duty-card.my-duty{background:#f1f8f3;border-color:#8eb7a0}.duty-card:hover:enabled{border-color:#6e9b83}
+@media(max-width:650px){.workbench-context{align-items:stretch;flex-direction:column;gap:16px}.workbench-context>label{max-width:none}.knowledge-home h2{font-size:22px}.question-form-footer{align-items:stretch;flex-direction:column}.question-form-footer .primary{align-self:flex-end}.duty-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.duty-card{padding:12px}.answer-business button,.all-business-links button{white-space:normal;text-align:left}.workbench-question-form{padding:12px}}
+
+.all-business-links{padding:0 26px 24px}
+.workspace-project-picker{margin:16px 0 18px;gap:8px;font-size:11px;color:#61786f;font-weight:500}.workspace-project-picker select{padding:10px 7px;font-size:12px;min-width:0;max-width:100%;text-overflow:ellipsis}.nav-empty-project{font-size:12px;padding:10px;line-height:1.8;color:#637b70}
+.rule-evaluation-form{border-top:1px solid #dae5dd;padding-top:18px;margin-top:18px}.rule-evaluation-form fieldset{min-width:0;border:1px solid #d5e1d8;border-radius:8px;padding:14px;margin:12px 0}.rule-evaluation-form legend{padding:0 6px;font-weight:600}
+.rule-case-result,.rule-history-entry{border:1px solid #dce6de;border-radius:8px;padding:14px;margin:12px 0;overflow-wrap:anywhere}.rule-case-result summary,.rule-history-entry summary{cursor:pointer;line-height:1.8;font-weight:550}
+.rule-case-result dl{margin:14px 0;display:grid;grid-template-columns:60px minmax(0,1fr);gap:10px}.rule-case-result dt{color:#5b7665}.rule-case-result dd{margin:0;white-space:pre-wrap;line-height:1.8;overflow-wrap:anywhere}
+.rule-step-list{padding-left:22px}.rule-step-list li{margin:12px 0;line-height:1.8}.rule-step-list small{font-weight:400;color:#678173}.rule-step-list pre,.rule-output{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font:inherit;line-height:1.8}.rule-step-list pre{background:#f2f6f3;padding:10px;border-radius:5px}
+.rule-run-history{margin-top:26px}.rule-version{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:12px 0}.rule-evaluation .fine{overflow-wrap:anywhere}.rule-application-card .heading-actions{flex-wrap:wrap}
+@media(max-width:650px){.rule-case-result dl{grid-template-columns:minmax(0,1fr);gap:6px}.rule-case-result,.rule-history-entry{padding:10px}.rule-evaluation-form .heading-actions{align-items:stretch;flex-direction:column}.rule-step-list{padding-left:18px}.rule-application-card button{white-space:normal}}
+@media(max-width:650px){.knowledge-home{padding:18px}.duty-grid{padding:0 18px 18px}.all-business-links{padding:0 18px 18px}}
+
+.rule-application-card textarea{display:block;width:100%;min-height:88px;resize:vertical;padding:12px;border:1px solid #d6e0df;border-radius:7px;font:inherit;color:#213737;background:#fff;line-height:1.8}.rule-application-card textarea:focus-visible{outline:3px solid #8ed8cc;outline-offset:3px}.rule-long-input p{margin:0 0 8px;white-space:pre-wrap;overflow-wrap:anywhere}.rule-long-input summary{color:#14786c;font-size:13px}.rule-long-input details>p{margin-top:10px}.rule-case-result>.notice{margin:12px 0}
+
+.business-start-guide{margin:0 26px 20px;padding:18px;border:1px solid #d7e7df;border-radius:8px;background:#f6faf7}.business-start-guide .business-heading{margin-bottom:10px}.business-start-guide h3{margin:0 0 8px}.business-start-guide .business-heading p{margin:0;font-size:13px;color:#5a7366}.business-start-guide summary{cursor:pointer;font-weight:600;padding:10px 0}.business-flow-steps{padding:0;list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.business-flow-steps li{display:flex;gap:10px;background:white;border:1px solid #dce7e0;border-radius:7px;padding:12px;min-width:0}.business-flow-steps li>span{flex-shrink:0;width:24px;height:24px;line-height:24px;text-align:center;color:#14786c;background:#e6f2ea;border-radius:50%}.business-flow-steps strong{display:block;line-height:1.6}.business-flow-steps small{display:block;color:#567563;margin:6px 0}.business-flow-steps p{font-size:12px;line-height:1.8;margin:0;overflow-wrap:anywhere}.workflow-next{margin-bottom:20px}.workflow-next p{margin:8px 0 12px}@media(max-width:1050px){.business-flow-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:650px){.business-start-guide{margin:0 14px 18px;padding:14px}.business-flow-steps{grid-template-columns:minmax(0,1fr)}.workflow-next button{white-space:normal}}

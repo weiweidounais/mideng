@@ -1,3 +1,5 @@
+from .pilot_service import workflow_admin
+from .pilot_service import business_roles
 from datetime import datetime,timedelta,timezone
 from decimal import Decimal
 from pathlib import Path
@@ -25,7 +27,7 @@ def view(db,o,a,roles):
     events=[dict(id=e.id,action=e.action,actor_id=e.actor_id,body=e.body,at=e.at) for e in db.scalars(select(PurchaseEvent).where(PurchaseEvent.order_id==o.id).order_by(PurchaseEvent.at))]
     # Unreferenced financial uploads are never advertised in public project reads.
     files=[file_view(f) for f in db.scalars(select(PurchaseFile).where(PurchaseFile.order_id==o.id)) if f.purpose!='archive' or money]
-    return {k:getattr(o,k) for k in ['id','project_id','version_id','revision','state','title','note','pm_id','purchase_id','quality_id','commerce_id','lines','result','arrivals','due_at','created_at','updated_at']}|{'owner_id':owner(o),'overdue':o.state!='archived' and o.due_at<utcnow(),'needs_review':not executable,'change_status':change_status,'change_id':related[0].id if related else None, 'archive':o.archive if money else None,'archive_total':str(sum((Decimal(x['amount']) for x in o.archive['costs']),Decimal(0))) if o.archive and money else None,'events':events,'files':files}
+    return {k:getattr(o,k) for k in ['id','project_id','version_id','revision','state','title','note','pm_id','purchase_id','quality_id','commerce_id','lines','result','arrivals','due_at','created_at','updated_at']}|{'lines_origin':'project_manager' if any(e['action']=='request' and e['body'].get('lines_source')=='project_manager' for e in events) else 'legacy_frozen','owner_id':owner(o),'overdue':o.state!='archived' and o.due_at<utcnow(),'needs_review':not executable,'change_status':change_status,'change_id':related[0].id if related else None, 'archive':o.archive if money else None,'archive_total':str(sum((Decimal(x['amount']) for x in o.archive['costs']),Decimal(0))) if o.archive and money else None,'events':events,'files':files}
 
 def record(store,db,a,o,action,rid,body):
     store.audit(db,a,'procurement.'+action,o.id,o.revision,rid,o.project_id)
@@ -39,16 +41,16 @@ def validate_actors(db,o):
 def create(store,db,a,pid,b,rid):
     role(store,db,a,pid,{'项目经理'})
     v=get(db,Version,pid,b.version_id);d=get(db,Document,pid,v.document_id)
-    if d.kind!='scheme' or not source_current(db,v):fail(409,'SOURCE_VERSION','须选择当前有效正式方案/BOM')
+    if d.kind!='scheme' or not source_current(db,v):fail(409,'SOURCE_VERSION','须选择当前有效正式落地方案')
     from .change_service import can_start
     if not can_start(db,pid,v):fail(409,'CHANGE_NOT_CONFIRMED','新来源的变更批准、必需接收确认或旧对象处置核对未齐，不能创建新采购任务')
     if db.scalar(select(PurchaseOrder.id).where(PurchaseOrder.version_id==v.id)):
-        fail(409,'PURCHASE_EXISTS','此正式BOM已建立采购需求，请打开现有采购单')
+        fail(409,'PURCHASE_EXISTS','此正式方案已建立采购需求，请打开现有采购单')
     pm_recipients=[x for x in v.recipients if effective_member(db,pid,x,{'项目经理'})]
-    if pm_recipients and a.id not in pm_recipients:fail(403,'RECIPIENT_ONLY','仅设计指定的项目经理可提交采购需求')
-    o=PurchaseOrder(id=uid(),project_id=pid,version_id=v.id,title=b.title,note=b.note,pm_id=a.id,purchase_id=b.purchase_id,quality_id=b.quality_id,commerce_id=b.commerce_id,lines=v.body['bom'],due_at=(datetime.now(timezone.utc)+timedelta(hours=24)).isoformat())
+    if pm_recipients and a.id not in pm_recipients and not workflow_admin(store,db,a,pid):fail(403,'RECIPIENT_ONLY','仅设计指定的项目经理可提交采购需求')
+    o=PurchaseOrder(id=uid(),project_id=pid,version_id=v.id,title=b.title,note=b.note,pm_id=a.id,purchase_id=b.purchase_id,quality_id=b.quality_id,commerce_id=b.commerce_id,lines=[line.model_dump(mode='json') for line in b.lines],due_at=(datetime.now(timezone.utc)+timedelta(hours=24)).isoformat())
     validate_actors(db,o);db.add(o);db.flush()
-    record(store,db,a,o,'request',rid,{'version_id':v.id,'note':b.note});return {'id':o.id,'revision':o.revision}
+    record(store,db,a,o,'request',rid,{'version_id':v.id,'note':b.note,'lines_source':'project_manager','line_count':len(o.lines)});return {'id':o.id,'revision':o.revision}
 
 def files_valid(db,o,ids,purpose):
     if not ids:fail(422,'EVIDENCE_REQUIRED','请上传并选择本采购单的原件证据')
@@ -59,7 +61,7 @@ def files_valid(db,o,ids,purpose):
         if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest()!=f.sha256:fail(409,'ORIGINAL_MISSING','附件原件缺失或校验不符，不能确认')
 
 def action(store,db,a,pid,o,b,rid):
-    roles=store.membership(db,a,pid)[1].roles
+    roles=business_roles(store.membership(db,a,pid)[1].roles)
     mapping={
         'accept_purchase':('requested','purchasing','采购',o.purchase_id),
         'return_request':('requested','request_returned','采购',o.purchase_id),
@@ -72,7 +74,7 @@ def action(store,db,a,pid,o,b,rid):
         'rectify':('quality_rework','quality_check','采购',o.purchase_id),
         'archive':('business_archive','archived','商务',o.commerce_id)}
     if b.action=='arrival':
-        if not ((a.id==o.purchase_id and '采购' in roles) or (a.id==o.quality_id and '质量' in roles)):fail(403,'RECIPIENT_ONLY','仅指定采购或质量账号可登记到货')
+        if not ((a.id==o.purchase_id and '采购' in roles) or (a.id==o.quality_id and '质量' in roles) or '管理员' in roles):fail(403,'RECIPIENT_ONLY','仅指定采购或质量账号可登记到货')
         if o.state not in {'quality_wait','quality_check'}:fail(409,'STATE_CONFLICT','须项目经理复核通过、交质量待到货后登记')
         if not b.arrival:fail(422,'ARRIVAL_REQUIRED','请填写实际到货批次')
         arr=b.arrival.model_dump(mode='json')
@@ -87,7 +89,7 @@ def action(store,db,a,pid,o,b,rid):
         body={'arrival':arr}
     else:
         old,new,r,aid=mapping[b.action]
-        if r not in roles or a.id!=aid:fail(403,'RECIPIENT_ONLY','请使用本节点指定的'+r+'账号操作')
+        if (r not in roles or a.id!=aid) and '管理员' not in roles:fail(403,'RECIPIENT_ONLY','请使用本节点指定的'+r+'账号操作')
         if o.state!=old:fail(409,'STATE_CONFLICT','当前节点不支持此动作，请刷新核对')
         from .change_service import execution_status
         if not execution_status(db,pid,'procurement',o.id,get(db,Version,pid,o.version_id))[0]:fail(409,'SOURCE_VERSION','源方案或需求已更新/撤销，须先复核版本，不可继续审批')
@@ -97,7 +99,7 @@ def action(store,db,a,pid,o,b,rid):
         if b.action=='submit_result':
             if not b.result:fail(422,'RESULT_REQUIRED','请填写下单/合同采购结果')
             lines=b.result.lines
-            if sorted(x.line_no for x in lines)!=list(range(1,len(o.lines)+1)):fail(422,'INVALID_LINES','采购结果须逐一对应BOM料行，不能遗漏或重复')
+            if sorted(x.line_no for x in lines)!=list(range(1,len(o.lines)+1)):fail(422,'INVALID_LINES','采购结果须逐一对应项目经理采购清单，不能遗漏或重复')
             differences=any(x.quantity!=Decimal(o.lines[x.line_no-1]['quantity']) for x in lines)
             if differences and not b.result.note:fail(422,'DIFFERENCE_REQUIRED','订购数量与需求不一致，须记录差异说明供项目经理复核')
             values['result']=b.result.model_dump(mode='json');body['result']=values['result']

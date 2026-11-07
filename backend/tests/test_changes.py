@@ -126,7 +126,7 @@ def test_new_tasks_need_new_version_approval_confirmation_and_dispositions(chang
     new=ok(oldpost(cs['design'],p,'/documents',{'kind':'scheme','parent_id':s['parent_id'],'source_version_id':payload['new_version_id'],'body':s['versions'][0]['body']}))
     new=ok(oldpost(cs['design'],p,'/documents/'+new['id']+'/publish',{'revision':new['revision'],'recipient_ids':[people['pm']['id']],'diff_summary':'新需求对应新方案'}))
     from test_procurement import base as procbase
-    body={'version_id':new['versions'][0]['id'],'title':'新任务','note':'须完成变更同步','purchase_id':people['purchase']['id'],'quality_id':people['quality']['id'],'commerce_id':people['biz']['id']}
+    body={'version_id':new['versions'][0]['id'],'title':'新任务','note':'须完成变更同步','lines':[{'material':'管材','spec':'DN100','quantity':'0.3','unit':'米','need_by':'2026-12-01'}],'purchase_id':people['purchase']['id'],'quality_id':people['quality']['id'],'commerce_id':people['biz']['id']}
     def attempt():return mutation(cs['pm'],'POST',procbase(p)+'/orders',body)
     assert attempt().status_code==409
     ok(act(change,'revise',replacement=payload));publish(change);acknowledge(change)

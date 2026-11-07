@@ -1,0 +1,30 @@
+{
+  "version": "knowledge-rules-v1",
+  "scope": "isolated synthetic fixtures; exact-text retrieval and deterministic rules; no model accuracy claim",
+  "retrieval": [
+    {"id":"R01","scenario":"published","actor":"reader","query":"材料到货","status":200,"names":["published.md"],"original_hash":true},
+    {"id":"R02","scenario":"published","actor":"owner","query":"商务归档","status":200,"names":["published.md"],"original_hash":true},
+    {"id":"R03","scenario":"queued","actor":"owner","query":"未发布标记-K02","status":200,"names":[]},
+    {"id":"R04","scenario":"withdrawn","actor":"reader","query":"撤回标记-K03","status":200,"names":[]},
+    {"id":"R05","scenario":"none","actor":"reader","query":"不存在标记-K99","status":200,"names":[]},
+    {"id":"R06","scenario":"private","actor":"reader","query":"私有标记-K04","status":404,"names":[]},
+    {"id":"R07","scenario":"private","actor":"owner","query":"私有标记-K04","status":200,"names":["private.md"],"original_hash":true},
+    {"id":"R08","scenario":"cross_project","actor":"reader","query":"材料到货","status":404,"names":[]},
+    {"id":"R09","scenario":"revoked","actor":"reader","query":"材料到货","status":404,"names":[]},
+    {"id":"R10","scenario":"long","actor":"reader","query":"长文末尾-K05","status":200,"names":["long.md"],"original_hash":true},
+    {"id":"R11","scenario":"published","actor":"reader","query":"material-check","status":200,"names":["published.md"]},
+    {"id":"R12","scenario":"invalid_input","actor":"reader","query":"   ","status":422,"names":[]}
+  ],
+  "rules": [
+    {"id":"A01","scenario":"template","input":"材料","expected_output":"核对：材料"},
+    {"id":"A02","scenario":"condition","input":"材料已到货","expected_output":"质量验收"},
+    {"id":"A03","scenario":"condition","input":"尚在下单","expected_output":"等待到货"},
+    {"id":"A04","scenario":"invalid_graph","status":422},
+    {"id":"A05","scenario":"invalid_input","input":"","status":422},
+    {"id":"A06","scenario":"wrong_expectation","input":"材料","expected":"错误预期","status":422,"expected_output":"核对：材料"},
+    {"id":"A07","scenario":"draft_isolation","input":"材料","expected_output":"核对：材料","draft_output":"新版：材料"},
+    {"id":"A08","scenario":"rollback","input":"材料","expected_output":"核对：材料"},
+    {"id":"A09","scenario":"evaluation_replay","input":"材料","expected":"核对","passed":1,"total":1},
+    {"id":"A10","scenario":"node_failure","input_length":2000,"expected_status":"failed","failed_node":"text"}
+  ]
+}

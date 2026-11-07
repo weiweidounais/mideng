@@ -1,3 +1,4 @@
+from .pilot_service import business_roles
 import hashlib,io,os,zipfile
 from pathlib import Path
 from typing import Literal
@@ -14,7 +15,7 @@ from .pilot_service import uid,fail
 
 def make_procurement_router(store,actor,key):
     router=APIRouter(prefix='/projects/{pid}/procurement',tags=['采购闭环v2'])
-    def scope(db,a,pid):return store.membership(db,a,pid)[1].roles
+    def scope(db,a,pid):return business_roles(store.membership(db,a,pid)[1].roles)
     def mutate(db,a,pid,name,idem,payload,fn):
         result=store.mutation(db,a,'procurement:'+pid+':'+name,idem,payload,fn)
         db.flush()
@@ -48,8 +49,8 @@ def make_procurement_router(store,actor,key):
             roles=scope(db,a,pid);o=get(db,PurchaseOrder,pid,oid)
             if o.state=='archived':fail(409,'ARCHIVE_IMMUTABLE','已归档采购单原件不可追加或覆盖')
             if purpose=='archive':
-                if '商务' not in roles or a.id!=o.commerce_id:fail(403,'RECIPIENT_ONLY','仅指定商务可上传采购合同原件')
-            elif not ((a.id==o.quality_id and '质量' in roles) or (a.id==o.purchase_id and '采购' in roles)):
+                if ('商务' not in roles or a.id!=o.commerce_id) and '管理员' not in roles:fail(403,'RECIPIENT_ONLY','仅指定商务可上传采购合同原件')
+            elif not ((a.id==o.quality_id and '质量' in roles) or (a.id==o.purchase_id and '采购' in roles) or '管理员' in roles):
                 fail(403,'RECIPIENT_ONLY','仅指定质量或采购可上传验收/整改证据')
         name=file.filename or '';ext=Path(name).suffix.lower()
         media={'.pdf':'application/pdf','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.txt':'text/plain','.md':'text/plain','.docx':'application/vnd.openxmlformats-officedocument.wordprocessingml.document','.xlsx':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}
@@ -82,8 +83,8 @@ def make_procurement_router(store,actor,key):
                 if o.state=='archived':fail(409,'ARCHIVE_IMMUTABLE','已归档原件不可追加')
                 roles=scope(db,a,pid)
                 if purpose=='archive':
-                    if '商务' not in roles or a.id!=o.commerce_id:fail(403,'RECIPIENT_ONLY','仅指定商务可上传采购合同原件')
-                elif not ((a.id==o.quality_id and '质量' in roles) or (a.id==o.purchase_id and '采购' in roles)):
+                    if ('商务' not in roles or a.id!=o.commerce_id) and '管理员' not in roles:fail(403,'RECIPIENT_ONLY','仅指定商务可上传采购合同原件')
+                elif not ((a.id==o.quality_id and '质量' in roles) or (a.id==o.purchase_id and '采购' in roles) or '管理员' in roles):
                     fail(403,'RECIPIENT_ONLY','仅指定质量或采购可上传证据')
                 def write():
                     nonlocal written

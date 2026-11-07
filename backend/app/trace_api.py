@@ -1,3 +1,4 @@
+from .pilot_service import business_roles
 import hashlib,io,zipfile,json
 from pathlib import Path
 from fastapi import APIRouter,Depends,Request,UploadFile,File,HTTPException
@@ -12,7 +13,7 @@ from . import trace_service as svc
 
 def make_trace_router(store,actor,key):
     router=APIRouter(prefix='/projects/{pid}/trace',tags=['管段履历与质量'])
-    def scope(db,a,pid):return store.membership(db,a,pid)[1].roles
+    def scope(db,a,pid):return business_roles(store.membership(db,a,pid)[1].roles)
     def mutate(db,a,pid,name,idem,payload,fn):
         scope(db,a,pid)
         result=store.mutation(db,a,'trace:'+pid+':'+name,idem,payload,fn);db.flush();return result
@@ -53,7 +54,7 @@ def make_trace_router(store,actor,key):
     async def upload(pid:str,sid:str,r:Request,file:UploadFile=File(...),a=Depends(actor),idem=Depends(key)):
         def allowed(db):
             scope(db,a,pid);s=get(db,Spool,pid,sid);o=get(db,TraceOrder,pid,s.order_id);roles=scope(db,a,pid)
-            if not any(a.id==aid and role in roles for aid,role in [(o.factory_id,'工厂'),(o.site_id,'现场'),(o.quality_id,'质量')]):fail(403,'ASSIGNED_ONLY','仅指定工厂/现场/质量可上传原件')
+            if not any(a.id==aid and role in roles for aid,role in [(o.factory_id,'工厂'),(o.site_id,'现场'),(o.quality_id,'质量')]) and '管理员' not in roles:fail(403,'ASSIGNED_ONLY','仅指定工厂/现场/质量可上传原件')
             if s.state in svc.END:fail(409,'SPOOL_ENDED','已结束对象不可新增原件')
             return s
         with store.transaction() as db:allowed(db)

@@ -1,3 +1,5 @@
+from .pilot_service import workflow_admin
+from .pilot_service import business_roles
 """Additive mobile trace projections; historical endpoints and all write gates stay intact."""
 import hashlib,json
 from typing import Any,Literal
@@ -44,7 +46,7 @@ def make_trace_workspace(store,actor):
  def detail(pid:str,sid:str,a=Depends(actor)):
   with store.transaction() as db:
    _,m=store.membership(db,a,pid);s=get(db,Spool,pid,sid);o=get(db,TraceOrder,pid,s.order_id);t=get(db,TraceTemplate,pid,s.template_id);v=get(db,Version,pid,o.version_id)
-   result=svc.view(db,s,m.roles,history=False)
+   result=svc.view(db,s,business_roles(m.roles),history=False)
    return result|dict(has_shipment=bool(db.scalar(select(TraceRecord.id).where(TraceRecord.spool_id==sid,TraceRecord.kind=='shipment').limit(1))),record_total=count(db,TraceRecord,pid,sid),event_total=count(db,TraceEvent,pid,sid),file_total=count(db,TraceFile,pid,sid),weld_total=count(db,TraceWeld,pid,sid),orders=[order_view(o)],templates=[template_view(db,t)],source_document_id=v.document_id,source_version_id=v.id)
  @router.get('/workspace/spools/{sid}/history',response_model=History)
  def history(pid:str,sid:str,kind:Literal['records','events','files','welds'],revision:int=Query(...,ge=1),page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=50),dataset_token:str|None=None,a=Depends(actor)):
@@ -59,7 +61,7 @@ def make_trace_workspace(store,actor):
    for r in rows:
     if kind=='records':
      data=dict(r.data)
-     if not set(m.roles)&{'工厂','现场','质量','项目经理'}:data.pop('welder_code',None)
+     if not set(business_roles(m.roles))&{'工厂','现场','质量','项目经理'}:data.pop('welder_code',None)
      files=list(db.scalars(select(TraceFile).where(TraceFile.project_id==pid,TraceFile.spool_id==sid,TraceFile.id.in_(r.file_ids)))) if r.file_ids else []
      items.append({k:getattr(r,k) for k in ['id','kind','file_ids','source','occurred_at','received_at','actor_id','corrects_id']}|dict(data=data,attachments=[file_view(f) for f in files]))
     elif kind=='events':items.append({k:getattr(r,k) for k in ['id','action','body','actor_id','at']})
@@ -69,7 +71,7 @@ def make_trace_workspace(store,actor):
  @router.get('/workspace/metrics',response_model=Metrics)
  def metrics(pid:str,a=Depends(actor)):
   with store.transaction() as db:
-   _,m=store.membership(db,a,pid);views=[svc.view(db,s,m.roles,history=False) for s in db.scalars(select(Spool).where(Spool.project_id==pid))];return svc.metrics(views)|dict(checked_at=utcnow())
+   _,m=store.membership(db,a,pid);views=[svc.view(db,s,business_roles(m.roles),history=False) for s in db.scalars(select(Spool).where(Spool.project_id==pid))];return svc.metrics(views)|dict(checked_at=utcnow())
  @router.get('/workspace/choices',response_model=Choices)
  def choices(pid:str,kind:Literal['sources','orders','templates','parents'],page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=50),order_id:str|None=None,template_id:str|None=None,a=Depends(actor)):
   with store.transaction() as db:
@@ -83,11 +85,12 @@ def make_trace_workspace(store,actor):
      if source_current(db,v):items.append(dict(id=v.id,label=str(title)+' · v'+str(v.number),available=can_start(db,pid,v)))
     return dict(items=items[(page-1)*page_size:page*page_size],total=len(items),page=page,page_size=page_size)
    if kind=='orders':
-    q=select(TraceOrder).where(TraceOrder.project_id==pid,TraceOrder.factory_id==a.id)
+    q=select(TraceOrder).where(TraceOrder.project_id==pid)
+    if not workflow_admin(store,db,a,pid):q=q.where(TraceOrder.factory_id==a.id)
     total=db.scalar(select(func.count()).select_from(q.subquery()));rows=db.scalars(q.order_by(TraceOrder.created_at.desc(),TraceOrder.id).offset((page-1)*page_size).limit(page_size));items=[dict(id=o.id,label=o.code,quality_id=o.quality_id) for o in rows]
    elif kind=='templates':
     q=select(TraceTemplate).where(TraceTemplate.project_id==pid)
-    if order_id:q=q.where(TraceTemplate.approved_by==o.quality_id)
+    if order_id and not workflow_admin(store,db,a,pid):q=q.where(TraceTemplate.approved_by==o.quality_id)
     total=db.scalar(select(func.count()).select_from(q.subquery()));rows=db.scalars(q.order_by(TraceTemplate.approved_at.desc(),TraceTemplate.id).offset((page-1)*page_size).limit(page_size));items=[dict(id=t.id,label=t.name+' · 焊接'+('适用' if t.welding else '不适用')+' / 试压'+('适用' if t.pressure else '不适用')) for t in rows]
    else:
     if not order_id or not template_id:fail(422,'PARENT_SCOPE','先指定同一订单和模板')

@@ -20,6 +20,16 @@ ACTIONS = {'project.edit': {'项目经理', '管理员'}, 'audit.read': {'项目
            'quality.release': {'质量'}, 'cost.publish': {'财务'}, 'cost.detail': {'财务'}}
 
 
+def business_roles(roles):
+    """Effective workflow capabilities; persisted memberships and audit roles stay unchanged."""
+    return list(ROLES) if '管理员' in roles else list(roles)
+
+
+def workflow_admin(store, db, actor, pid):
+    # A technical account flag never bypasses active project membership.
+    return '管理员' in store.membership(db, actor, pid)[1].roles
+
+
 def uid():
     return uuid.uuid4().hex
 
@@ -34,7 +44,7 @@ def account_view(a):
 
 def project_view(p, roles):
     return {'id': p.id, 'code': p.code, 'name': p.name, 'revision': p.revision, 'roles': roles,
-            'actions': [k for k, allowed in ACTIONS.items() if allowed.intersection(roles)]}
+            'actions': [k for k, allowed in ACTIONS.items() if allowed.intersection(business_roles(roles))]}
 
 
 def member_view(m, a):
@@ -80,7 +90,7 @@ class Store:
         now = utcnow()
         if not p or not m or not m.active or m.valid_from > now or (m.valid_until and m.valid_until <= now):
             fail(404, 'NOT_ACCESSIBLE', '项目不存在或无访问权限')
-        if action and not ACTIONS[action].intersection(m.roles):
+        if action and not ACTIONS[action].intersection(business_roles(m.roles)):
             fail(403, 'ACTION_FORBIDDEN', '当前项目岗位无此操作权限')
         return p, m
 

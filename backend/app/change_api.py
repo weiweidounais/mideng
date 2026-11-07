@@ -1,3 +1,4 @@
+from .pilot_service import business_roles
 import hashlib,io,zipfile
 from pathlib import Path
 from fastapi import APIRouter,Depends,Request,UploadFile,File,Form
@@ -11,7 +12,7 @@ from . import change_service as svc
 
 def make_change_router(store,actor,key):
     router=APIRouter(prefix='/projects/{pid}/changes',tags=['变更同步与处置'])
-    def scope(db,a,pid):return store.membership(db,a,pid)[1].roles
+    def scope(db,a,pid):return business_roles(store.membership(db,a,pid)[1].roles)
     def readable(c,a,roles):return bool(c.current_version_id or c.created_by==a.id or set(roles)&{'项目经理','设计','商务','质量','财务'})
     def mutation(db,a,pid,name,idem,payload,fn):
         result=store.mutation(db,a,'change:'+pid+':'+name,idem,payload,fn);db.flush()

@@ -1,3 +1,4 @@
+from .pilot_service import business_roles
 import hashlib,io
 from pathlib import Path
 from fastapi import APIRouter,Depends,Request,UploadFile,File
@@ -69,7 +70,7 @@ def make_assurance_router(store,actor,key):
   with store.transaction(write=True) as db:
    _,m=store.membership(db,a,pid)
    if not b.confirmed:fail(422,'EXPORT_CONFIRM','请明确确认本项目授权范围的本机证据导出')
-   if b.include_sensitive and not set(m.roles)&{'财务','商务'}:fail(403,'SENSITIVE_SCOPE','敏感导出须具有对应财务/商务岗位')
+   if b.include_sensitive and not set(business_roles(m.roles))&{'财务','商务'}:fail(403,'SENSITIVE_SCOPE','敏感导出须具有对应财务/商务岗位')
    def save():
     e=EvidenceExport(id=uid(),project_id=pid,actor_id=a.id,roles=sorted(m.roles),include_sensitive=int(b.include_sensitive));db.add(e);db.flush();store.audit(db,a,'assurance.export',e.id,1,r.state.request_id,pid);return {'id':e.id,'revision':1}
    return mutate(db,a,pid,'export',idem,b.model_dump(mode='json'),save)

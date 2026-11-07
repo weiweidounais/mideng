@@ -1,3 +1,4 @@
+from .pilot_service import business_roles
 """Same authorization projections as business reads, plus bounded immutable originals."""
 import csv,io,json,hashlib,zipfile
 from pathlib import Path
@@ -21,7 +22,7 @@ def csvsafe(value):
 def export_access(store,db,a,e):
  _,m=store.membership(db,a,e.project_id)
  if a.id!=e.actor_id or sorted(m.roles)!=sorted(e.roles):fail(404,'EXPORT_SCOPE_CHANGED','导出不存在或当前岗位范围已改变，请重新申请导出')
- return m.roles
+ return business_roles(m.roles)
 
 def package(store,db,a,e):
  roles=export_access(store,db,a,e);roles=roles if e.include_sensitive else [r for r in roles if r not in {'财务','商务'}]

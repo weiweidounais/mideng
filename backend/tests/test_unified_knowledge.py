@@ -148,3 +148,36 @@ def test_reserved_model_interfaces_are_scoped_and_do_not_forge_answers(knowledge
     ok(mutation(admin,'PUT',base,{'name':lib['name'],'readers':[],'restricted':True,'revision':lib['revision']}))
     assert mutation(reader,'POST',base+'/retrieve',{'query':'到货'}).status_code==404
     assert mutation(reader,'POST',base+'/chat/stream',{'query':'到货'}).status_code==404
+
+def test_task_progress_is_owner_only_and_actions_match_state(knowledge):
+    app,admin,_,_,reader,_,base=knowledge
+    d=ok(upload(knowledge));progress=d['processing']
+    assert progress['attempts']==0 and progress['max_attempts']==3
+    assert not progress['can_retry'] and not progress['can_publish']
+    assert '重复上传' in d['status_hint']
+    assert run_knowledge_job(app.state.store)
+    d=ok(admin.get('/api'+base+'/documents/'+d['id']))
+    assert d['processing']['attempts']==1 and d['processing']['can_publish']
+    d=ok(mutation(admin,'POST',base+'/documents/'+d['id']+'/actions',{'revision':d['revision'],'action':'publish'}))
+    assert not d['processing']['can_publish']
+    shared=ok(reader.get('/api'+base+'/documents/'+d['id']))
+    assert 'processing' not in shared and 'AI' in shared['status_hint']
+    assert 'processing' not in ok(reader.get('/api'+base+'/documents'))['items'][0]
+    assert 'processing' in ok(admin.get('/api'+base+'/documents'))['items'][0]
+
+
+def test_expired_lease_progress_and_attempt_limit_retain_original(knowledge):
+    app,admin,_,_,_,_,base=knowledge;d=ok(upload(knowledge))
+    with app.state.store.transaction(write=True) as db:
+        row=db.get(KnowledgeDocument,d['id']);row.state='parsing';row.attempts=3;row.lease_until='2000-01-01T00:00:00+00:00'
+    path='/api'+base+'/documents/'+d['id']
+    assert ok(admin.get(path))['processing']['waiting_for_recovery']
+    assert run_knowledge_job(app.state.store)
+    d=ok(admin.get(path));assert d['state']=='failed' and d['processing']['can_retry']
+    assert d['processing']['lease_expires_at'] is None
+    raw=admin.get(path+'/original');assert hashlib.sha256(raw.content).hexdigest()==d['sha256']
+    retried=ok(mutation(admin,'POST',base+'/documents/'+d['id']+'/actions',{'revision':d['revision'],'action':'retry'}))
+    assert retried['state']=='queued' and retried['processing']['attempts']==0
+    assert run_knowledge_job(app.state.store)
+    assert ok(admin.get(path))['state']=='review'
+    assert ok(admin.get('/api'+base+'/documents'))['total']==1

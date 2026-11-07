@@ -1,3 +1,4 @@
+from .pilot_service import business_roles
 """Unified-account adapter. No legacy anonymous/global knowledge routers mounted."""
 import hashlib,json,copy,zipfile
 from pathlib import Path
@@ -10,6 +11,7 @@ from sqlalchemy import select,or_,update
 from .pilot_models import Membership,utcnow
 from .pilot_service import fail,uid
 from .knowledge_models import Library,KnowledgeDocument,RuleApplication,RuleRun
+from .knowledge_evaluation import EvaluationCase,EvaluationReport,evaluate_rules
 
 class Strict(BaseModel):model_config=ConfigDict(extra='forbid',str_strip_whitespace=True)
 class LibraryBody(Strict):
@@ -26,13 +28,30 @@ class AppBody(Strict):
     revision:int=Field(default=0,ge=0)
 class AppPublish(Strict):
     revision:int=Field(ge=1)
-    cases:list[dict]=Field(min_length=1,max_length=20)
+    cases:list[EvaluationCase]=Field(min_length=1,max_length=20)
 class AppRun(Strict):
     input:str=Field(min_length=1,max_length=10000)
     mode:Literal['draft','published']='published'
 class AppRollback(Strict):
     revision:int=Field(ge=1)
     target_revision:int=Field(ge=1)
+
+MAX_PARSE_ATTEMPTS = 3
+STATE_HINTS = {
+    'queued': '原件已保存，等待后台解析；不需要重复上传。',
+    'parsing': '正在解析原件；任务中断后会在恢复窗口内重新领取。',
+    'review': '解析完成，请先核对片段，再发布供原文检索。',
+    'published': '原文已发布，可检索并核对来源原件；未启用AI生成。',
+    'failed': '解析未完成，请核对文件格式和文字内容后重试；原件仍保留。',
+}
+
+class ProcessingStatus(Strict):
+    attempts:int
+    max_attempts:int
+    lease_expires_at:str|None
+    waiting_for_recovery:bool
+    can_retry:bool
+    can_publish:bool
 
 def visible(store,db,a,pid,lid,edit=False):
     store.membership(db,a,pid)
@@ -58,7 +77,14 @@ def revision(row,expected):
     if row.revision!=expected:fail(409,'REVISION_CONFLICT','内容已更新，请刷新后核对',current_revision=row.revision)
 
 def library_view(l):return {k:getattr(l,k) for k in ['id','name','owner_id','restricted','readers','revision','created_at']}|{'domain':'knowledge'}
-def doc_view(d):return {k:getattr(d,k) for k in ['id','name','actor_id','state','revision','size','sha256','warnings','error','created_at']}|{'chunk_count':len(d.chunks),'domain':'knowledge'}
+def doc_view(d,owner=False):
+    result={k:getattr(d,k) for k in ['id','name','actor_id','state','revision','size','sha256','warnings','error','created_at']}|{'chunk_count':len(d.chunks),'domain':'knowledge','status_hint':STATE_HINTS.get(d.state,'请刷新后核对任务状态。')}
+    if owner:
+        result['processing']=ProcessingStatus(attempts=d.attempts,max_attempts=MAX_PARSE_ATTEMPTS,
+            lease_expires_at=d.lease_until,
+            waiting_for_recovery=d.state=='parsing' and bool(d.lease_until and d.lease_until<utcnow()),
+            can_retry=d.state=='failed',can_publish=d.state=='review' and bool(d.chunks)).model_dump()
+    return result
 
 def run_knowledge_job(store):
     """Durable lease: a killed parser becomes reclaimable; no provider calls."""
@@ -66,8 +92,8 @@ def run_knowledge_job(store):
         now=utcnow();d=db.scalar(select(KnowledgeDocument).where(or_(KnowledgeDocument.state=='queued',(KnowledgeDocument.state=='parsing') & (KnowledgeDocument.lease_until<now))).order_by(KnowledgeDocument.created_at).limit(1))
         if not d:return False
 
-        if d.attempts>=3:
-            d.state='failed';d.error='任务中断次数达到上限，请核对后手动重试';d.revision+=1;return True
+        if d.attempts>=MAX_PARSE_ATTEMPTS:
+            d.state='failed';d.error='任务中断次数达到上限，请核对后手动重试';d.revision+=1;d.lease_until=None;return True
         d.attempts+=1;d.state='parsing';d.lease_until=(datetime.now(timezone.utc)+timedelta(minutes=5)).isoformat();did=d.id;claim=d.attempts;path=d.path;name=d.name;sha=d.sha256
     chunks=[];warnings=[];error=''
     try:
@@ -106,7 +132,7 @@ def make_knowledge_router(store,actor,key):
     def create(pid:str,b:LibraryBody,r:Request,a=Depends(actor),idem=Depends(key)):
         with store.transaction(write=True) as db:
             _,m=store.membership(db,a,pid)
-            if not set(m.roles)&{'项目经理','设计','商务','管理员'}:fail(403,'KNOWLEDGE_CREATE','由项目经理、设计或商务建立知识空间')
+            if not set(business_roles(m.roles))&{'项目经理','设计','商务','管理员'}:fail(403,'KNOWLEDGE_CREATE','由项目经理、设计或商务建立知识空间')
             readers(db,pid,b.readers)
             def work():
                 l=Library(id=uid(),project_id=pid,owner_id=a.id,**b.model_dump());db.add(l);db.flush();store.audit(db,a,'knowledge.create',l.id,1,r.state.request_id,pid);return library_view(l)
@@ -126,7 +152,7 @@ def make_knowledge_router(store,actor,key):
             l=visible(store,db,a,pid,lid);q=select(KnowledgeDocument).where(KnowledgeDocument.library_id==lid)
             rows=list(db.scalars(q.order_by(KnowledgeDocument.created_at.desc())))
             rows=[d for d in rows if d.state=='published' or a.id==l.owner_id]
-            return {'items':[doc_view(d) for d in rows[(page-1)*20:page*20]],'total':len(rows),'page':page,'can_edit':a.id==l.owner_id,'model_enabled':False}
+            return {'items':[doc_view(d,a.id==l.owner_id) for d in rows[(page-1)*20:page*20]],'total':len(rows),'page':page,'can_edit':a.id==l.owner_id,'model_enabled':False}
 
     @router.post('/libraries/{lid}/documents')
     async def upload(pid:str,lid:str,r:Request,file:UploadFile=File(...),a=Depends(actor),idem=Depends(key)):
@@ -161,7 +187,7 @@ def make_knowledge_router(store,actor,key):
                 def work():
                     nonlocal written
                     with path.open('xb') as f:f.write(raw)
-                    path.chmod(0o600);written=True;d=KnowledgeDocument(id=did,project_id=pid,library_id=lid,actor_id=a.id,name=name,path=str(path),sha256=sha,size=len(raw));db.add(d);db.flush();store.audit(db,a,'knowledge.upload',did,1,r.state.request_id,pid);return doc_view(d)
+                    path.chmod(0o600);written=True;d=KnowledgeDocument(id=did,project_id=pid,library_id=lid,actor_id=a.id,name=name,path=str(path),sha256=sha,size=len(raw));db.add(d);db.flush();store.audit(db,a,'knowledge.upload',did,1,r.state.request_id,pid);return doc_view(d,True)
                 return mutation(db,a,pid,lid,'upload',idem,{'name':name,'sha256':sha},work)
         except BaseException:
             if written:path.unlink(missing_ok=True)
@@ -172,7 +198,7 @@ def make_knowledge_router(store,actor,key):
         with store.transaction() as db:
             l=visible(store,db,a,pid,lid);d=scoped(db,KnowledgeDocument,pid,lid,did)
             if d.state!='published' and a.id!=l.owner_id:fail(404,'NOT_ACCESSIBLE','资料尚未发布')
-            return doc_view(d)|{'chunks':d.chunks}
+            return doc_view(d,a.id==l.owner_id)|{'chunks':d.chunks}
 
     @router.get('/libraries/{lid}/documents/{did}/original')
     def download(pid:str,lid:str,did:str,a=Depends(actor)):
@@ -197,7 +223,7 @@ def make_knowledge_router(store,actor,key):
                 else:
                     if d.state!='failed':fail(409,'STATE_CONFLICT','仅失败任务可重试')
                     d.state='queued';d.error='';d.attempts=0
-                d.revision+=1;store.audit(db,a,'knowledge.'+b.action,did,d.revision,r.state.request_id,pid);return doc_view(d)
+                d.revision+=1;store.audit(db,a,'knowledge.'+b.action,did,d.revision,r.state.request_id,pid);return doc_view(d,True)
             return mutation(db,a,pid,lid,'document:'+did,idem,b.model_dump(),work)
 
     @router.post('/libraries/{lid}/search')
@@ -234,7 +260,7 @@ def make_knowledge_router(store,actor,key):
         d=_definition(body)
         if any(n['kind'] not in {'start','condition','template','output'} for n in d['nodes']):fail(409,'MODEL_DISABLED','检索与模型节点尚未启用，请先使用规则和模板节点')
         g=inspect_graph(d)
-        if g[0]:fail(422,'APPLICATION_INVALID','；'.join(x['message'] for x in g[0]))
+        if g[0]:fail(422,'APPLICATION_INVALID','；'.join(x['message'] for x in g[0]),field_errors=[{'field':x.get('nodeId','graph'),'message':x['message']} for x in g[0]])
         return d,g
 
     def app_view(app,owner):
@@ -263,22 +289,32 @@ def make_knowledge_router(store,actor,key):
                 revision(app,b.revision);app.definition=d;app.revision+=1;store.audit(db,a,'knowledge.application.edit',aid,app.revision,r.state.request_id,pid);return app_view(app,True)
             return mutation(db,a,pid,lid,'application.edit:'+aid,idem,b.model_dump(),work)
 
+    @router.post('/libraries/{lid}/applications/{aid}/evaluate',response_model=EvaluationReport)
+    async def app_evaluate(pid:str,lid:str,aid:str,b:AppPublish,r:Request,a=Depends(actor),idem=Depends(key)):
+        with store.transaction(write=True) as db:
+            visible(store,db,a,pid,lid,edit=True);app=scoped(db,RuleApplication,pid,lid,aid)
+            saved=store.mutation(db,a,'knowledge:'+pid+':'+lid+':application.evaluate:'+aid,idem,b.model_dump(),lambda:{'id':uid(),'revision':1,'domain':'knowledge'})
+            old=db.get(RuleRun,saved['id'])
+            if old:return old.result
+            revision(app,b.revision);d,g=definition(app.definition)
+            report=await evaluate_rules(app,d,g,b.cases,a,saved['id']);result=report.model_dump()
+            db.add(RuleRun(id=report.id,project_id=pid,library_id=lid,application_id=aid,actor_id=a.id,result=result))
+            store.audit(db,a,'knowledge.application.evaluate',report.id,1,r.state.request_id,pid)
+            from .pilot_models import Idempotency
+            row=db.scalar(select(Idempotency).where(Idempotency.actor_id==a.id,Idempotency.key==idem,Idempotency.action=='knowledge:'+pid+':'+lid+':application.evaluate:'+aid));row.result=result
+            return report
+
     @router.post('/libraries/{lid}/applications/{aid}/publish')
     async def app_publish(pid:str,lid:str,aid:str,b:AppPublish,r:Request,a=Depends(actor),idem=Depends(key)):
-        from .applications import _run_eval_gate,EvalGateCase
-        from .security import Actor
-        from pydantic import ValidationError
-        try:cases=[EvalGateCase.model_validate(x) for x in b.cases]
-        except ValidationError:fail(422,'EVALUATION_INVALID','请核对发布前测试用例')
         with store.transaction(write=True) as db:
             visible(store,db,a,pid,lid,edit=True);app=scoped(db,RuleApplication,pid,lid,aid)
             # Rules only; this coroutine has no model or network operations.
-            d,g=definition(app.definition);report=await _run_eval_gate(d,cases,Actor(a.id,'user',''),g)
+            d,g=definition(app.definition);report=await evaluate_rules(app,d,g,b.cases,a,uid())
             def work():
                 revision(app,b.revision)
-                if report['passRate']!=1:fail(422,'EVALUATION_FAILED','测试用例未全部通过，未发布新版本')
+                if report.passed!=report.total:fail(422,'EVALUATION_FAILED','测试用例未全部通过，未发布新版本',field_errors=[{'field':'cases.'+str(c.number-1),'message':'用例'+str(c.number)+'的实际结果不符合预期'} for c in report.cases if not c.passed])
                 if app.published and app.published['revision']==app.revision:return app_view(app,True)
-                snapshot=copy.deepcopy(d)|{'revision':app.revision,'evaluation':report,'published_at':utcnow()};app.published=snapshot;app.versions=[*app.versions,snapshot];store.audit(db,a,'knowledge.application.publish',aid,app.revision,r.state.request_id,pid);return app_view(app,True)
+                snapshot=copy.deepcopy(d)|{'revision':app.revision,'evaluation':report.model_dump(),'published_at':utcnow()};app.published=snapshot;app.versions=[*app.versions,snapshot];store.audit(db,a,'knowledge.application.publish',aid,app.revision,r.state.request_id,pid);return app_view(app,True)
             return mutation(db,a,pid,lid,'application.publish:'+aid,idem,b.model_dump(),work)
 
     @router.post('/libraries/{lid}/applications/{aid}/rollback')

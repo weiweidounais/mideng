@@ -12,9 +12,9 @@
     "preview:prototype": "vite preview --mode prototype --outDir dist-prototype --host 127.0.0.1 --port 5173 --strictPort",
     "test:prototype": "node scripts/test-prototype.mjs",
     "typecheck": "tsc -p tsconfig.pilot.json",
-    "lint": "eslint src/pilot src/pilot-main.tsx",
+    "lint": "eslint src/pilot src/pilot-main.tsx src/demo src/demo-main.tsx",
     "build:legacy": "tsc -p tsconfig.legacy.json && vite build --config vite.legacy.config.ts",
-    "test": "node --test scripts/test-pilot.mjs scripts/test-navigation.mjs scripts/test-forms.mjs scripts/test-trace.mjs && node scripts/test-prototype.mjs",
+    "test": "node --test scripts/test-pilot.mjs scripts/test-navigation.mjs scripts/test-forms.mjs scripts/test-trace.mjs scripts/test-knowledge-load.mjs scripts/test-rule-results.mjs scripts/test-workflow-guide.mjs && node scripts/test-prototype.mjs",
     "build:demo": "tsc -p tsconfig.demo.json && vite build --config vite.demo.config.ts --mode public-demo && node scripts/prepare-demo.mjs",
     "preview:demo": "vite preview --config vite.demo.config.ts --host 127.0.0.1 --port 18432 --strictPort",
     "test:demo": "node --test scripts/test-demo.mjs"

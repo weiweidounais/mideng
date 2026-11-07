@@ -86,7 +86,7 @@ def main():
                 time.sleep(.1)
             else:raise AssertionError('正式版本待办未持久化')
             proc='/api/projects/'+pid+'/procurement'
-            order=write('POST',proc+'/orders',{'version_id':scheme['versions'][0]['id'],'title':'恢复采购闭环','note':'随机标记真实业务恢复','purchase_id':c.restart_account_id,'quality_id':c.restart_account_id,'commerce_id':c.restart_account_id})
+            order=write('POST',proc+'/orders',{'version_id':scheme['versions'][0]['id'],'title':'恢复采购闭环','note':'随机标记真实业务恢复','lines':[{'material':'项目经理恢复管材','spec':'DN100','quantity':'0.3','unit':'米','need_by':'2026-12-01'}],'purchase_id':c.restart_account_id,'quality_id':c.restart_account_id,'commerce_id':c.restart_account_id})
             def action(name,**extra):
                 nonlocal_order=write('POST',proc+'/orders/'+order['id']+'/actions',{'revision':order['revision'],'action':name,**extra})
                 order.update(nonlocal_order)
@@ -178,6 +178,14 @@ def main():
             response=c.post(assurance+'/exceptions/'+exception['id']+'/files',files={'file':('assurance-recovery.md',content,'text/plain')},headers={'X-Idempotency-Key':secrets.token_hex(16)});response.raise_for_status();exception_file=response.json()['id']
             write('POST',assurance+'/exceptions/'+exception['id']+'/actions',{'revision':exception['revision'],'action':'waive','reason':sys.argv[2],'approval_no':'SYN-RESTART','until':(datetime.now(timezone.utc)+__import__('datetime').timedelta(days=1)).isoformat(),'file_ids':[exception_file]})
             evidence_export=write('POST',assurance+'/exports',{'confirmed':True,'include_sensitive':True,'reason':'合成重启恢复授权导出'})
+            kb='/api/projects/'+pid+'/knowledge'
+            library=write('POST',kb+'/libraries',{'name':'恢复规则报告','readers':[]})
+            rulebase=kb+'/libraries/'+library['id']
+            definition={'name':'恢复规则应用','nodes':[{'id':n,'kind':kind,'label':n,'config':cfg} for n,kind,cfg in [('start','start',{}),('text','template',{'template':'恢复：{{input}}'}),('out','output',{'template':'{{previous.output}}'})]],'edges':[{'id':'s-t','source':'start','target':'text'},{'id':'t-o','source':'text','target':'out'}]}
+            rule=write('POST',rulebase+'/applications',{'definition':definition})
+            evaluation=write('POST',rulebase+'/applications/'+rule['id']+'/evaluate',{'revision':1,'cases':[{'input':sys.argv[2],'expectContains':sys.argv[2]}]})
+            assert evaluation['passed']==evaluation['total']==1
+            hook=json.loads(STATE.read_text());hook['knowledge_report']={'base':rulebase,'id':evaluation['id'],'sha256':hashlib.sha256(json.dumps(evaluation,sort_keys=True).encode()).hexdigest()};STATE.write_text(json.dumps(hook))
             print(':'.join([pid,d['id'],f['id'],scheme['id'],contract['id'],order['id'],quality_file,archive_file,change['id'],approval_file,','.join(change_files),spool['id'],','.join(trace_files),photo_id,photo_hash,cost_batch_id['id'],cost_source,cost_hash,cost_evidence,cost_snapshot,cost_pending['id'],exception['id'],exception_file,evidence_export['id']]))
     elif action=='read':
         with client() as c:
@@ -202,6 +210,8 @@ def main():
             response=c.get(proc+'/board');response.raise_for_status()
             recovered=next(o for o in response.json()['orders'] if o['id']==order_id)
             assert recovered['state']=='archived' and recovered['version_id']==scheme['versions'][0]['id']
+            assert recovered['lines_origin']=='project_manager' and recovered['lines'][0]['material']=='项目经理恢复管材'
+            assert scheme['versions'][0]['body']['bom'][0]['material']=='测试管材'
             workspace='/api/projects/'+pid+'/workspace'
             response=c.get(workspace+'/locate',params={'section':'procurement','object_id':order_id,'version_id':recovered['version_id'],'kind':'procurement'});response.raise_for_status();assert response.json()['object_id']==order_id
             response=c.get(workspace+'/purchase-orders/'+order_id);response.raise_for_status();assert response.json()['order']['state']=='archived' and response.json()['comparison'][0]['required_quantity']=='0.3'
@@ -262,6 +272,9 @@ def main():
             with zipfile.ZipFile(io.BytesIO(response.content)) as z:
                 manifest=json.loads(z.read('manifest.json'));assert version['body']['summary'] in z.read('objects.json').decode()
                 for f in manifest['files']:assert hashlib.sha256(z.read(f['path'])).hexdigest()==f['sha256']
+            report_state=json.loads(STATE.read_text())['knowledge_report']
+            rr=c.get(report_state['base']+'/runs');rr.raise_for_status();saved=next(x for x in rr.json() if x['id']==report_state['id'])
+            assert hashlib.sha256(json.dumps(saved,sort_keys=True).encode()).hexdigest()==report_state['sha256']
             # A second, relocated data directory must serve the same business facts through HTTP.
             from app.data_bundle import backup,restore
             archive=DATA/'full-backup.zip';restore_dir=DATA/'restored-isolated';backup(DATA/'runtime',archive);restore(archive,restore_dir)
@@ -281,6 +294,8 @@ def main():
                     rb=restored.get(base+'/board');rb.raise_for_status();assert any(v['body'].get('summary')==version['body']['summary'] for d in rb.json()['documents'] for v in d['versions'])
                     rb=restored.get(tracebase+'/board');rb.raise_for_status();rs=next(x for x in rb.json()['spools'] if x['id']==spool_id);assert rs['state']=='completed' and any(r['data'].get('batch')==version['body']['summary'] for r in rs['records'])
                     rb=restored.get(cb+'/board');rb.raise_for_status();assert next(x for x in rb.json()['snapshots'] if x['id']==cost_snapshot)['body']['actual_accounting']=='100.30'
+                    rr=restored.get(report_state['base']+'/runs');rr.raise_for_status();saved=next(x for x in rr.json() if x['id']==report_state['id'])
+                    assert hashlib.sha256(json.dumps(saved,sort_keys=True).encode()).hexdigest()==report_state['sha256']
                     for path in [base+'/files/'+handoff_fid,tracebase+'/files/'+trace_files.split(',')[0],cb+'/files/'+cost_evidence,assurance+'/files/'+exception_file]:
                         rr=restored.get(path);rr.raise_for_status();assert rr.content==original.content
             finally:

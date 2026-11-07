@@ -1,3 +1,3 @@
 import tseslint from 'typescript-eslint';
 import hooks from 'eslint-plugin-react-hooks';
-export default tseslint.config(...tseslint.configs.recommended,{files:['src/pilot/**/*.{ts,tsx}','src/pilot-main.tsx'],plugins:{'react-hooks':hooks},rules:{'react-hooks/rules-of-hooks':'error','react-hooks/exhaustive-deps':'error'}});
+export default tseslint.config(...tseslint.configs.recommended,{files:['src/pilot/**/*.{ts,tsx}','src/pilot-main.tsx','src/demo/**/*.{ts,tsx}','src/demo-main.tsx'],plugins:{'react-hooks':hooks},rules:{'react-hooks/rules-of-hooks':'error','react-hooks/exhaustive-deps':'error'}});

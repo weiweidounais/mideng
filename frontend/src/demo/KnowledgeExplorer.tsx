@@ -39,7 +39,7 @@ export default function KnowledgeExplorer({query, hits, temporaryCount, importin
     <section className="knowledge-intro">
       <span className="demo-caption">EXPLORE KNOWLEDGE</span>
       <h1>探索知识</h1>
-      <p>找到需要的资料，让下一步有据可循。</p>
+      <p>先问业务问题，查找相关原文，再进入对应业务。</p>
       <div className="knowledge-import">
         <div><strong>用自己的资料试一试</strong><p>TXT / MD / CSV · 单份最多 1 MB<br/>仅在本页读取，刷新或重置后清空。请用合成或脱敏文件体验。</p></div>
         <button className="primary" disabled={importing} onClick={()=>fileInput.current?.click()}>{importing?'正在解析…':'临时导入资料'}</button>
@@ -54,12 +54,12 @@ export default function KnowledgeExplorer({query, hits, temporaryCount, importin
         event.preventDefault();
         onSearch(query);
       }}>
-        <label htmlFor="knowledge-query">搜索知识原文</label>
+        <label htmlFor="knowledge-query">知识问答 / 搜索原文</label>
         <div className="knowledge-search-box">
           <span aria-hidden="true">⌕</span>
           <input id="knowledge-query" type="search" value={query} maxLength={200}
-            onChange={event => onQuery(event.target.value)} placeholder="搜索采购、到货验收、变更等资料"/>
-          <button className="primary" type="submit">搜索知识</button>
+            onChange={event => onQuery(event.target.value)} placeholder="例如：设计出方案后，采购清单由谁填写？"/>
+          <button className="primary" type="submit">查找依据</button>
         </div>
       </form>
       <div className="knowledge-topics" aria-label="推荐搜索">

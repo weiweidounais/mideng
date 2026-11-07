@@ -1,3 +1,4 @@
+from .pilot_service import workflow_admin
 """Immutable template photo originals, linked only by the responsible quality actor."""
 import hashlib
 from pathlib import Path
@@ -26,14 +27,14 @@ def template_view(db,t):
 
 def attach(store,db,a,t,ids,rid):
     role(store,db,a,t.project_id,{'质量'})
-    if t.approved_by!=a.id:fail(403,'TEMPLATE_OWNER','仅该模板原确认质量人员可补充照片')
+    if t.approved_by!=a.id and not workflow_admin(store,db,a,t.project_id):fail(403,'TEMPLATE_OWNER','仅该模板原确认质量人员可补充照片')
     existing=set(db.scalars(select(TemplatePhotoLink.photo_id).where(TemplatePhotoLink.template_id==t.id)))
     if len(existing|set(ids))>10:fail(422,'PHOTO_LIMIT','每份模板最多10张照片')
     added=[]
     for fid in ids:
         if fid in existing:continue
         p=get(db,TemplatePhoto,t.project_id,fid)
-        if p.created_by!=a.id:fail(404,'NOT_ACCESSIBLE','照片不存在或无访问权限')
+        if p.created_by!=a.id and not workflow_admin(store,db,a,p.project_id):fail(404,'NOT_ACCESSIBLE','照片不存在或无访问权限')
         if db.scalar(select(TemplatePhotoLink).where(TemplatePhotoLink.photo_id==fid)):fail(422,'PHOTO_LINKED','照片已关联其他模板，请重新上传原件')
         original(p);db.add(TemplatePhotoLink(template_id=t.id,photo_id=fid,actor_id=a.id));added.append(fid)
     if added:store.audit(db,a,'trace.template.photos',t.id,1,rid,t.project_id)
@@ -68,13 +69,13 @@ def make_photo_router(store,actor,key):
     def supplement(pid:str,tid:str,b:PhotoIds,r:Request,a=Depends(actor),idem=Depends(key)):
         with store.transaction(write=True) as db:
             role(store,db,a,pid,{'质量'});t=get(db,TraceTemplate,pid,tid)
-            if t.approved_by!=a.id:fail(403,'TEMPLATE_OWNER','仅该模板原确认质量人员可补充照片')
+            if t.approved_by!=a.id and not workflow_admin(store,db,a,t.project_id):fail(403,'TEMPLATE_OWNER','仅该模板原确认质量人员可补充照片')
             return store.mutation(db,a,'trace:'+pid+':template-photos:'+tid,idem,b.model_dump(mode='json'),lambda:attach(store,db,a,t,b.photo_ids,r.state.request_id))
     @router.get('/template-photos/{fid}')
     def download(pid:str,fid:str,a=Depends(actor)):
         with store.transaction() as db:
             store.membership(db,a,pid);p=get(db,TemplatePhoto,pid,fid);linked=db.scalar(select(TemplatePhotoLink).where(TemplatePhotoLink.photo_id==fid))
-            if not linked and p.created_by!=a.id:fail(404,'NOT_ACCESSIBLE','照片不存在或无访问权限')
+            if not linked and p.created_by!=a.id and not workflow_admin(store,db,a,p.project_id):fail(404,'NOT_ACCESSIBLE','照片不存在或无访问权限')
             data=original(p)
             from urllib.parse import quote
             return Response(data,media_type=p.media_type,headers={'Content-Disposition':"inline; filename*=UTF-8''"+quote(p.name)})

@@ -112,13 +112,13 @@ def test_technical_admin_without_membership_cannot_read_business(env):
     assert grant(admin,p,{'id':aid},['管理员'],revision=1,active=False).status_code==200
     assert admin.get('/api/projects/'+p['id']).status_code==404
     assert admin.get('/api/projects').json()==[]
-    # Administration may restore membership, never implicitly sign a business decision.
+    # Active project administrators may handle every business role; membership is still mandatory.
     assert grant(admin,p,{'id':aid},['管理员'],revision=2).status_code==200
     view=admin.get('/api/projects/'+p['id']).json()
-    assert 'cost.publish' not in view['actions'] and 'quality.release' not in view['actions']
+    assert 'cost.publish' in view['actions'] and 'quality.release' in view['actions']
 
 
-@pytest.mark.parametrize('roles,action,expected',[(['市场'],'project.edit',False),(['项目经理'],'project.edit',True),(['管理员'],'cost.publish',False),(['财务'],'cost.publish',True),(['工厂'],'quality.release',False),(['质量'],'quality.release',True)])
+@pytest.mark.parametrize('roles,action,expected',[(['市场'],'project.edit',False),(['项目经理'],'project.edit',True),(['管理员'],'cost.publish',True),(['财务'],'cost.publish',True),(['工厂'],'quality.release',False),(['质量'],'quality.release',True)])
 def test_roles_are_server_derived(env,roles,action,expected):
     app,admin=env;a=add_account(admin);p=add_project(admin);assert grant(admin,p,a,roles).status_code==200
     alice=user_client(app,'alice');view=alice.get('/api/projects/'+p['id']).json()

@@ -1,3 +1,4 @@
+from .pilot_service import business_roles
 import copy,hashlib
 from pathlib import Path
 from datetime import datetime,timezone,timedelta
@@ -66,7 +67,7 @@ def view(db,c,a,roles):
     versions=[]
     for v in db.scalars(select(ChangeVersion).where(ChangeVersion.case_id==c.id).order_by(ChangeVersion.number.desc())):
         ds=[{k:getattr(d,k) for k in ['id','target_key','decision','executor_id','reason','file_ids','submitted_at','verified_at','verified_by']} for d in db.scalars(select(ChangeDisposition).where(ChangeDisposition.version_id==v.id))]
-        versions.append({'id':v.id,'number':v.number,'body':redact(v.body),'published_at':v.published_at,'receipts':receipts(db,v),'dispositions':ds})
+        versions.append({'id':v.id,'number':v.number,'body':redact(v.body),'published_at':v.published_at,'receipts':receipts(db,v),'self_confirmed':bool(db.scalar(select(ChangeAck.id).where(ChangeAck.version_id==v.id,ChangeAck.actor_id==a.id))),'dispositions':ds})
     files=[]
     for f in db.scalars(select(ChangeFile).where(ChangeFile.case_id==c.id)):
         files.append(file_view(f)|{'name':f.name if not f.restricted or money else '受限原件（仅商务/财务可下载）','purpose':f.purpose,'restricted':f.restricted,'version_id':f.version_id})
@@ -93,7 +94,7 @@ def act(store,db,a,pid,c,b,rid):
     body={};values={}
     if b.action=='impact':
         if state not in {'analysis','await_approval'}:fail(409,'STATE_CONFLICT','仅分析阶段可确认专业影响')
-        if not b.category or not set(m.roles)&IMPACT_ROLES[b.category]:fail(403,'PROFESSIONAL_ONLY','请使用对应专业岗位账号确认')
+        if not b.category or not set(business_roles(m.roles))&IMPACT_ROLES[b.category]:fail(403,'PROFESSIONAL_ONLY','请使用对应专业岗位账号确认')
         if b.has_impact is None or not b.reason:fail(422,'IMPACT_REQUIRED','须明确有无影响及依据，不得以待补充发布')
         allowed={t['key'] for t in draft['targets']}
         if not set(b.target_keys)<=allowed or (b.has_impact and not b.target_keys):fail(422,'IMPACT_TARGETS','有影响须列出实际受影响对象')
@@ -134,8 +135,8 @@ def act(store,db,a,pid,c,b,rid):
     else:
         if not v or b.version_id!=v.id or state not in {'published','handling','verifying'}:fail(409,'CHANGE_VERSION','须针对当前有效发布版本操作，旧确认不能沿用')
         if b.action=='ack':
-            if a.id not in v.body['recipients']:fail(403,'RECIPIENT_ONLY','仅本版冻结接收人可本人确认')
-            if not any(r['account_id']==a.id and r['delivered_at'] for r in receipts(db,v)):fail(409,'NOT_DELIVERED','站内待办尚未送达，不能冒充确认')
+            if a.id not in v.body['recipients'] and '管理员' not in m.roles:fail(403,'RECIPIENT_ONLY','仅本版冻结接收人可本人确认')
+            if a.id in v.body['recipients'] and not any(r['account_id']==a.id and r['delivered_at'] for r in receipts(db,v)):fail(409,'NOT_DELIVERED','站内待办尚未送达，不能冒充确认')
             if not db.scalar(select(ChangeAck).where(ChangeAck.version_id==v.id,ChangeAck.actor_id==a.id)):
                 db.add(ChangeAck(id=uid(),version_id=v.id,actor_id=a.id))
             state='handling' if state=='published' else state
@@ -150,7 +151,7 @@ def act(store,db,a,pid,c,b,rid):
                 d=ChangeDisposition(id=uid(),project_id=pid,version_id=v.id,target_key=b.target_key,decision=b.decision,executor_id=target['owner_id'],reason=b.reason);db.add(d)
                 notify(db,pid,[d.executor_id],'变更对象待处置：'+target['title'],'change',c.id,v.id)
             elif b.action=='execute':
-                if not d or a.id!=d.executor_id or target['role'] not in m.roles:fail(403,'EXECUTOR_ONLY','仅已指定对象责任岗位可提交处置证据')
+                if not d or ((a.id!=d.executor_id or target['role'] not in business_roles(m.roles)) and '管理员' not in m.roles):fail(403,'EXECUTOR_ONLY','仅已指定对象责任岗位可提交处置证据')
                 if not db.scalar(select(ChangeAck).where(ChangeAck.version_id==v.id,ChangeAck.actor_id==a.id)):fail(409,'ACK_REQUIRED','须先本人确认本版变更，再提交处置证据')
                 if d.submitted_at:fail(409,'DISPOSITION_IMMUTABLE','已提交处置不可覆盖，请起修订保留历史')
                 if not b.reason:fail(422,'REASON_REQUIRED','请记录实际处置说明')

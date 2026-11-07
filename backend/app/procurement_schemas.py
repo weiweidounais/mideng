@@ -9,6 +9,7 @@ class PurchaseCreate(Strict):
     title:str=Field(min_length=1,max_length=120)
     note:str=Field(min_length=1,max_length=2000)
     purchase_id:str;quality_id:str;commerce_id:str
+    lines:list[BomLine]=Field(min_length=1,max_length=5000)
 
 class ResultLine(Strict):
     line_no:int=Field(ge=1)
@@ -61,6 +62,7 @@ class ProcurementOut(BaseModel):
     id:str;project_id:str;version_id:str;revision:int;state:str;title:str;note:str
     pm_id:str;purchase_id:str;quality_id:str;commerce_id:str;owner_id:str
     lines:list[BomLine]
+    lines_origin:Literal['project_manager','legacy_frozen']='legacy_frozen'
     result:PurchaseResult|None
     arrivals:list[dict]
     archive:PurchaseArchive|None

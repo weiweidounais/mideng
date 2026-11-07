@@ -10,7 +10,7 @@ for(const file of await files(root)){
  if(/\.(?:db|sqlite|pem|key|zip|json|env)$/.test(file))throw new Error('Unexpected data artifact in demo: '+path.basename(file));
  if(/\.(?:js|html|css)$/.test(file)){
   const content=await readFile(file,'utf8');
-  if(/127\.0\.0\.1:18410|127\.0\.0\.1:18430|bootstrap-passwords|zhixu_session|mideng_pilot_session/.test(content))throw new Error('Private runtime reference in demo artifact');
+  if(/127\.0\.0\.1:18410|127\.0\.0\.1:18430|localhost:18431|127\.0\.0\.1:18431|bootstrap-passwords|zhixu_session|mideng_pilot_session/.test(content))throw new Error('Private runtime reference in demo artifact');
  }
 }
 console.log('Public demo artifact: static files only; CSP blocks all backend connections.');

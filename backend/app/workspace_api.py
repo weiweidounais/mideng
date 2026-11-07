@@ -1,3 +1,4 @@
+from .pilot_service import business_roles
 """Additive, read-only navigation and bounded workspace projections."""
 from datetime import datetime
 from decimal import Decimal
@@ -12,6 +13,7 @@ from .handoff_models import Document,Version,Contract,MaterialRow
 from .handoff_schemas import BoardOut,DocOut
 from .procurement_models import PurchaseOrder
 from .procurement_schemas import ProcurementOut
+from .workbench_knowledge import Question,Answer,answer_question
 Section=Literal['requirements','procurement','changes','trace','cost','assurance','knowledge']
 class Link(BaseModel):
  project_id:str;section:Section;object_id:str|None=None;version_id:str|None=None;kind:str|None=None;title:str='';state:str='';owner_id:str|None=None;due_at:str|None=None
@@ -27,7 +29,7 @@ class Comparison(BaseModel):line_no:int;material:str;spec:str;required_quantity:
 class PurchaseDetail(BaseModel):order:ProcurementOut;source:Link;source_number:int;source_title:str;source_current:bool;comparison:list[Comparison]
 
 def locate(store,db,a,pid,section,oid=None,version=None,kind=None):
- _,m=store.membership(db,a,pid);roles=m.roles
+ _,m=store.membership(db,a,pid);roles=business_roles(m.roles)
  allowed={'requirements':{'document'},'procurement':{'procurement','contract'},'changes':{'change'},'trace':{'spool','trace_order'},'cost':{'cost_batch','cost_close','cost_snapshot'},'assurance':{'assurance'},'knowledge':{'library'}}
  if kind and kind not in allowed[section]:fail(422,'LOCATION_INVALID','对象类型与板块不匹配')
  if not oid:
@@ -82,10 +84,11 @@ def locate(store,db,a,pid,section,oid=None,version=None,kind=None):
 def can_request(db,v,a):
  from .procurement_service import effective_member
  recipients=[x for x in v.recipients if effective_member(db,v.project_id,x,{'项目经理'})]
- return not recipients or a.id in recipients
+ member=db.scalar(select(Membership).where(Membership.project_id==v.project_id,Membership.account_id==a.id))
+ return not recipients or a.id in recipients or bool(member and '管理员' in member.roles and effective_member(db,v.project_id,a.id))
 
 def actionable(db,a,roles,link):
- kind=link['kind'];oid=link['object_id'];state=link['state'];owner=link['owner_id']
+ roles=business_roles(roles);kind=link['kind'];oid=link['object_id'];state=link['state'];owner=link['owner_id']
  if not oid:return False
  if kind=='document':
   d=db.get(Document,oid);v=db.get(Version,link['version_id']) if link['version_id'] else None
@@ -114,6 +117,9 @@ def actionable(db,a,roles,link):
 
 def make_workspace_router(store,actor):
  router=APIRouter(tags=['工作台与导航'])
+ @router.post('/projects/{pid}/workspace/ask',response_model=Answer)
+ def ask(pid:str,b:Question,a=Depends(actor)):
+  with store.transaction() as db:return answer_question(store,db,a,pid,b)
  @router.get('/workbench',response_model=Tasks)
  def workbench(project_id:str|None=None,mode:Literal['pending','all']='pending',page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=50),a=Depends(actor)):
   with store.transaction() as db:
@@ -147,20 +153,20 @@ def make_workspace_router(store,actor):
  @router.get('/projects/{pid}/workspace/documents',response_model=Docs)
  def documents(pid:str,page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=50),a=Depends(actor)):
   with store.transaction() as db:
-   _,m=store.membership(db,a,pid);q=visible_query(pid,a,m.roles).where(Document.kind=='requirement');total=db.scalar(select(func.count()).select_from(q.subquery()));rows=db.scalars(q.order_by(Document.created_at.desc(),Document.id).offset((page-1)*page_size).limit(page_size));items=[]
+   _,m=store.membership(db,a,pid);q=visible_query(pid,a,business_roles(m.roles)).where(Document.kind=='requirement');total=db.scalar(select(func.count()).select_from(q.subquery()));rows=db.scalars(q.order_by(Document.created_at.desc(),Document.id).offset((page-1)*page_size).limit(page_size));items=[]
    for d in rows:
-    v=hs.latest(db,d);can_draft=d.created_by==a.id or bool(set(m.roles)&hs.EDIT[d.kind]);body=d.draft if d.has_draft and can_draft else (v.body if v else {});items.append(dict(id=d.id,kind=d.kind,parent_id=d.parent_id,title=body.get('title','需求'),version_no=d.version_no,has_draft=d.has_draft))
+    v=hs.latest(db,d);can_draft=d.created_by==a.id or bool(set(business_roles(m.roles))&hs.EDIT[d.kind]);body=d.draft if d.has_draft and can_draft else (v.body if v else {});items.append(dict(id=d.id,kind=d.kind,parent_id=d.parent_id,title=body.get('title','需求'),version_no=d.version_no,has_draft=d.has_draft))
    return dict(items=items,total=total,page=page,page_size=page_size)
  @router.get('/projects/{pid}/workspace/document-context/{did}',response_model=BoardOut)
  def document_context(pid:str,did:str,version_id:str|None=None,a=Depends(actor)):
   with store.transaction() as db:
-   _,m=store.membership(db,a,pid);locate(store,db,a,pid,'requirements',did,version_id,'document');d=hs.get(db,Document,pid,did);parent=d.parent_id or d.id;docs=[x for x in db.scalars(select(Document).where(Document.project_id==pid,or_(Document.id==parent,Document.parent_id==parent))) if hs.visible(db,x,a,m.roles)]
-   return dict(documents=[hs.document_view(db,d,a,m.roles) for d in docs],contracts=[],rows=[],arrivals=[],issues=[],events=[])
+   _,m=store.membership(db,a,pid);locate(store,db,a,pid,'requirements',did,version_id,'document');d=hs.get(db,Document,pid,did);parent=d.parent_id or d.id;docs=[x for x in db.scalars(select(Document).where(Document.project_id==pid,or_(Document.id==parent,Document.parent_id==parent))) if hs.visible(db,x,a,business_roles(m.roles))]
+   return dict(documents=[hs.document_view(db,d,a,business_roles(m.roles)) for d in docs],contracts=[],rows=[],arrivals=[],issues=[],events=[])
  @router.get('/projects/{pid}/workspace/sources',response_model=BoardOut)
  def sources(pid:str,a=Depends(actor)):
   with store.transaction() as db:
-   _,m=store.membership(db,a,pid);docs=list(db.scalars(visible_query(pid,a,m.roles)))
-   return dict(documents=[hs.document_view(db,d,a,m.roles) for d in docs],contracts=[],rows=[],arrivals=[],issues=[],events=[])
+   _,m=store.membership(db,a,pid);docs=list(db.scalars(visible_query(pid,a,business_roles(m.roles))))
+   return dict(documents=[hs.document_view(db,d,a,business_roles(m.roles)) for d in docs],contracts=[],rows=[],arrivals=[],issues=[],events=[])
  @router.get('/projects/{pid}/workspace/procurement',response_model=Purchases)
  def procurement(pid:str,page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=50),a=Depends(actor)):
   from .procurement_service import owner
@@ -174,13 +180,13 @@ def make_workspace_router(store,actor):
    _,m=store.membership(db,a,pid);o=hs.get(db,PurchaseOrder,pid,oid);v=hs.get(db,Version,pid,o.version_id);comparison=[];ordered={r['line_no']:r for r in o.result['lines']} if o.result else {}
    for i,line in enumerate(o.lines,1):
     order=ordered.get(i);comparison.append(dict(line_no=i,material=line['material'],spec=line['spec'],required_quantity=line['quantity'],ordered_quantity=order['quantity'] if order else None,unit=line['unit'],need_by=line['need_by'],eta=order['eta'] if order else None,quantity_changed=bool(order and Decimal(order['quantity'])!=Decimal(line['quantity'])),late_eta=bool(order and order['eta']>line['need_by'])))
-   return dict(order=view(db,o,a,m.roles),source=locate(store,db,a,pid,'requirements',v.document_id,v.id,'document'),source_number=v.number,source_title=v.body['title'],source_current=hs.source_current(db,v),comparison=comparison)
+   return dict(order=view(db,o,a,business_roles(m.roles)),source=locate(store,db,a,pid,'requirements',v.document_id,v.id,'document'),source_number=v.number,source_title=v.body['title'],source_current=hs.source_current(db,v),comparison=comparison)
  @router.get('/projects/{pid}/workspace/bom-options',response_model=Boms)
  def boms(pid:str,page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=50),a=Depends(actor)):
   with store.transaction() as db:
    _,m=store.membership(db,a,pid);items=[]
    for d in db.scalars(select(Document).where(Document.project_id==pid,Document.kind=='scheme',Document.version_no>0)):
     v=hs.latest(db,d)
-    if hs.source_current(db,v) and not db.scalar(select(PurchaseOrder.id).where(PurchaseOrder.version_id==v.id)):items.append(dict(id=v.id,document_id=d.id,title=v.body['title'],number=v.number,can_request='项目经理' in m.roles and can_request(db,v,a)))
+    if hs.source_current(db,v) and not db.scalar(select(PurchaseOrder.id).where(PurchaseOrder.version_id==v.id)):items.append(dict(id=v.id,document_id=d.id,title=v.body['title'],number=v.number,can_request='项目经理' in business_roles(m.roles) and can_request(db,v,a)))
    return dict(items=items[(page-1)*page_size:page*page_size],total=len(items),page=page,page_size=page_size)
  return router

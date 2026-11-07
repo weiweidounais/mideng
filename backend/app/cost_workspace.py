@@ -1,3 +1,4 @@
+from .pilot_service import business_roles
 """Compatible, role-filtered projections for financial forms and bounded row review."""
 import json
 from typing import Any,Literal
@@ -33,7 +34,7 @@ def make_cost_workspace(store,actor):
  @router.get('/workspace',response_model=Workspace)
  def workspace(pid:str,batch_page:int=Query(1,ge=1),close_page:int=Query(1,ge=1),snapshot_page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=50),object_id:str|None=None,kind:Literal['cost_batch','cost_close','cost_snapshot']|None=None,a=Depends(actor)):
   with store.transaction() as db:
-   _,member=store.membership(db,a,pid);fin='财务' in member.roles;public=fin or '项目经理' in member.roles
+   _,member=store.membership(db,a,pid);fin='财务' in business_roles(member.roles);public=fin or '项目经理' in business_roles(member.roles)
    result=dict(can_finance=fin,can_summary=public,profiles=[],calendars=[],budgets=[],files=[],batches=[],closes=[],snapshots=[],changes=[],batch_total=0,close_total=0,snapshot_total=0)
    if bool(object_id)!=bool(kind):fail(422,'LOCATION_INVALID','须同时指定成本对象与类型')
    if object_id:
