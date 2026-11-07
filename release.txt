@@ -1,4 +1,4 @@
-Mideng public demo
-Source commit: 5f7e70e50bd4bb1bce9671120e0f0f8fb0b0714c
-Browser-only temporary knowledge imports. Uploaded selections remain in page memory; no backend/model requests.
-All navigation entries retained.
+Mideng public synthetic demo
+source_commit=5584faad9a25624063eebe4e9716e56be4a4b09a
+source_branch=optimize/knowledge-cycle-20261106
+data=synthetic; runtime=browser-memory; backend=none
